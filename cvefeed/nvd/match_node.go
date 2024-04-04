@@ -37,13 +37,14 @@ func nodeMatcher(ID string, node *schema.NVDCVEAPIFeedJSONDefNode) (wfn.Matcher,
 			}
 		}
 	}
-	for _, child := range node.Children {
-		if child != nil {
-			if m, err := nodeMatcher(ID, child); err == nil {
-				ms = append(ms, m)
-			}
-		}
-	}
+	// there is no Children in the API version
+	// for _, child := range node.Children {
+	// 	if child != nil {
+	// 		if m, err := nodeMatcher(ID, child); err == nil {
+	// 			ms = append(ms, m)
+	// 		}
+	// 	}
+	// }
 
 	if len(ms) == 0 {
 		return nil, fmt.Errorf("%s: empty configuration for node", ID)

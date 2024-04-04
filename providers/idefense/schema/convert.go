@@ -20,9 +20,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	cveDataVersion = "4.0"
-)
 
 // Convert implements runner.Convertible interface
 func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
@@ -41,47 +38,42 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	}
 
 	return &nvd.NVDCVEAPIFeedJSONDefCVEItem{
-		CVE: &nvd.CVEJSON40{
-			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
-				ID:       item.ID(),
-				ASSIGNER: "idefense",
+		Id:       item.ID(),
+		SourceIdentifier: "idefense",
+		Descriptions: &nvd.CVEAPIJSONDescription{
+			DescriptionData: []*nvd.CVEJSON40LangString{
+				{Lang: "en", Value: item.Description},
 			},
-			DataFormat:  "MITRE",
-			DataType:    "CVE",
-			DataVersion: cveDataVersion,
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: []*nvd.CVEJSON40LangString{
-					{Lang: "en", Value: item.Description},
-				},
-			},
-			Problemtype: &nvd.CVEJSON40Problemtype{
-				ProblemtypeData: []*nvd.CVEJSON40ProblemtypeProblemtypeData{
-					{
-						Description: []*nvd.CVEJSON40LangString{
-							{Lang: "en", Value: item.Cwe},
-						},
-					},
-				},
-			},
-			References: item.makeReferences(),
 		},
 		Configurations: configurations,
-		Impact: &nvd.NVDCVEAPIFeedJSONDefMetrics{
-			BaseMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-				CVSSV2: &nvd.CVSSV20{
+		Metrics: &nvd.NVDCVEAPIFeedJSONDefMetrics{
+			CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+				CVSSData: &nvd.CVSSData{
 					BaseScore:     item.Cvss2BaseScore,
 					TemporalScore: item.Cvss2TemporalScore,
 					VectorString:  item.Cvss2,
 				},
 			},
-			BaseMetricV3: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-				CVSSV3: &nvd.CVSSData{
+			CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+				CVSSData: &nvd.CVSSData{
 					BaseScore:     item.Cvss3BaseScore,
 					TemporalScore: item.Cvss3TemporalScore,
 					VectorString:  item.Cvss3,
 				},
 			},
 		},
+		Weaknesses: []*nvd.CVEAPIJSONWeakness{
+			{
+				Source: "",
+				Type: "",
+				Description: &nvd.CVEAPIJSONDescription{
+					DescriptionData: []*nvd.CVEJSON40LangString{
+						{Lang: "en", Value: item.Cwe},
+					},
+				},
+			},
+		},
+		References: item.makeReferences(),
 		LastModified: lastModifiedDate,
 		Published:    publishedDate,
 	}, nil
@@ -91,15 +83,14 @@ func (item *Vulnerability) ID() string {
 	return "idefense-" + item.Key
 }
 
-func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
+func (item *Vulnerability) makeReferences() []*nvd.CVEAPIJSONReference {
 	if len(item.SourcesExternal) == 0 {
 		return nil
 	}
 
 	var refsData []*nvd.CVEAPIJSONReference
-	addRef := func(name, url string) {
+	addRef := func(_, url string) {
 		refsData = append(refsData, &nvd.CVEAPIJSONReference{
-			Name: name,
 			URL:  url,
 		})
 	}
@@ -119,9 +110,7 @@ func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
 		addRef(fix.ID, fix.URL)
 	}
 
-	return &nvd.CVEAPIJSONReferences{
-		ReferenceData: refsData,
-	}
+	return refsData
 }
 
 func (item *Vulnerability) makeConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigurations, error) {
@@ -156,9 +145,8 @@ func (item *Vulnerability) makeConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfig
 	}
 
 	v := nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		CVEDataVersion: cveDataVersion,
 		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
-			&nvd.NVDCVEAPIFeedJSONDefNode{
+			{
 				CPEMatch: matches,
 				Operator: "OR",
 			},

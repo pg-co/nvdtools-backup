@@ -104,40 +104,31 @@ type CVEJSON40Problemtype struct {
 
 // CVEJSON40 was auto-generated.
 // Source: https://csrc.nist.gov/schema/nvd/feed/1.0/CVE_JSON_4.0_min.schema
-type CVEJSON40 struct {
-	Affects     *CVEJSON40Affects     `json:"affects"`
-	CVEDataMeta *CVEJSON40CVEDataMeta `json:"CVE_data_meta"`
-	DataFormat  string                `json:"data_format"`
-	DataType    string                `json:"data_type"`
-	DataVersion string                `json:"data_version"`
-	Description *CVEAPIJSONDescription `json:"description"`
-	Problemtype *CVEJSON40Problemtype `json:"problemtype"`
-	References  *CVEAPIJSONReferences  `json:"references"`
-}
 
-// CVSSV20 was auto-generated.
+
+// CVSSData was auto-generated.
 // Source: https://csrc.nist.gov/schema/nvd/feed/1.0/cvss-v2.0.json
-type CVSSV20 struct {
-	AccessComplexity           string  `json:"accessComplexity,omitempty"`
-	AccessVector               string  `json:"accessVector,omitempty"`
-	Authentication             string  `json:"authentication,omitempty"`
-	AvailabilityImpact         string  `json:"availabilityImpact,omitempty"`
-	AvailabilityRequirement    string  `json:"availabilityRequirement,omitempty"`
-	BaseScore                  float64 `json:"baseScore"`
-	CollateralDamagePotential  string  `json:"collateralDamagePotential,omitempty"`
-	ConfidentialityImpact      string  `json:"confidentialityImpact,omitempty"`
-	ConfidentialityRequirement string  `json:"confidentialityRequirement,omitempty"`
-	EnvironmentalScore         float64 `json:"environmentalScore,omitempty"`
-	Exploitability             string  `json:"exploitability,omitempty"`
-	IntegrityImpact            string  `json:"integrityImpact,omitempty"`
-	IntegrityRequirement       string  `json:"integrityRequirement,omitempty"`
-	RemediationLevel           string  `json:"remediationLevel,omitempty"`
-	ReportConfidence           string  `json:"reportConfidence,omitempty"`
-	TargetDistribution         string  `json:"targetDistribution,omitempty"`
-	TemporalScore              float64 `json:"temporalScore,omitempty"`
-	VectorString               string  `json:"vectorString"`
-	Version                    string  `json:"version"`
-}
+// type CVSSData struct {
+// 	AccessComplexity           string  `json:"accessComplexity,omitempty"`
+// 	AccessVector               string  `json:"accessVector,omitempty"`
+// 	Authentication             string  `json:"authentication,omitempty"`
+// 	AvailabilityImpact         string  `json:"availabilityImpact,omitempty"`
+// 	AvailabilityRequirement    string  `json:"availabilityRequirement,omitempty"`
+// 	BaseScore                  float64 `json:"baseScore"`
+// 	CollateralDamagePotential  string  `json:"collateralDamagePotential,omitempty"`
+// 	ConfidentialityImpact      string  `json:"confidentialityImpact,omitempty"`
+// 	ConfidentialityRequirement string  `json:"confidentialityRequirement,omitempty"`
+// 	EnvironmentalScore         float64 `json:"environmentalScore,omitempty"`
+// 	Exploitability             string  `json:"exploitability,omitempty"`
+// 	IntegrityImpact            string  `json:"integrityImpact,omitempty"`
+// 	IntegrityRequirement       string  `json:"integrityRequirement,omitempty"`
+// 	RemediationLevel           string  `json:"remediationLevel,omitempty"`
+// 	ReportConfidence           string  `json:"reportConfidence,omitempty"`
+// 	TargetDistribution         string  `json:"targetDistribution,omitempty"`
+// 	TemporalScore              float64 `json:"temporalScore,omitempty"`
+// 	VectorString               string  `json:"vectorString"`
+// 	Version                    string  `json:"version"`
+// }
 
 // CVSSData was auto-generated.
 // Source: https://csrc.nist.gov/schema/nvd/feed/1.0/cvss-v3.0.json
@@ -212,21 +203,21 @@ type CVEAPIJSONReference struct {
 }
 
 // CVEAPIJSONReferences was auto-generated.
-// type CVEAPIJSONReferences struct {
-// 	ReferenceData []*CVEAPIJSONReference `json:"reference_data"`
-// }
+type CVEAPIJSONReferences struct {
+	ReferenceData []*CVEAPIJSONReference `json:"reference_data"`
+}
 
 type CVEAPIJSONWeakness struct {
 	Source			string 						`json:"source"`
 	Type			string 						`json:"type"`
-	Description	 	[]*CVEAPIJSONDescription 		`json:"description"`
+	Description	 	*CVEAPIJSONDescription 		`json:"description"`
 }
 
 
 // NVDCVEAPIFeedJSONDefImpactBaseMetricV2 was auto-generated.
 // CVSS V2.0 score.
 type NVDCVEAPIFeedJSONDefImpactBaseMetricV2 struct {
-	CVSSV2                  *CVSSData `json:"cvssData,omitempty"`
+	CVSSData                  *CVSSData `json:"cvssData,omitempty"`
 	BaseSeverity                string   `json:"baseSeverity,omitempty"`
 	ExploitabilityScore     float64  `json:"exploitabilityScore,omitempty"`
 	ImpactScore             float64  `json:"impactScore,omitempty"`
@@ -242,7 +233,7 @@ type NVDCVEAPIFeedJSONDefImpactBaseMetricV2 struct {
 type NVDCVEAPIFeedJSONDefImpactBaseMetricV31 struct {
 	Source 				string	 `json:"source"`
 	Type				string	 `json:"type,omitempty"`
-	CVSSV3              *CVSSData `json:"cvssData,omitempty"`
+	CVSSData              *CVSSData `json:"cvssData,omitempty"`
 	ExploitabilityScore float64  `json:"exploitabilityScore,omitempty"`
 	ImpactScore         float64  `json:"impactScore,omitempty"`
 }
@@ -260,16 +251,15 @@ type NVDCVEAPIFeedJSONDefMetrics struct {
 // Defines a vulnerability in the NVD data feed.
 type NVDCVEAPIFeedJSONDefCVEItem struct {
 	Id				 string								`json:"id"`
-	SourceIdentifier string								`json:"sourceIdentifier"`
+	SourceIdentifier string								`json:"sourceIdentifier,omitempty"`
 	Published    	 string                             `json:"published,omitempty"`
 	LastModified 	 string                             `json:"lastModified,omitempty"`
-	VulnStatus 		 string								`json:"vulnStatus"`
+	VulnStatus 		 string								`json:"vulnStatus,omitempty"`
 	Descriptions	 *CVEAPIJSONDescription				`json:"description"`
-	Metrics			 *NVDCVEAPIFeedJSONDefMetrics					`json:"metrics"`
-	Weaknesses		 []*CVEAPIJSONWeakness					`json:"weaknesses,omitempty"`
+	Metrics			 *NVDCVEAPIFeedJSONDefMetrics		`json:"metrics"`
+	Weaknesses		 []*CVEAPIJSONWeakness				`json:"weaknesses,omitempty"`
 	Configurations   *NVDCVEAPIFeedJSONDefConfigurations `json:"configurations,omitempty"`
 	References		 []*CVEAPIJSONReference			 `json:"references"`
-	Impact           *NVDCVEAPIFeedJSONDefMetrics          `json:"impact,omitempty"`
 }
 
 // NVDCVEAPIFeedJSON was auto-generated.
@@ -280,4 +270,15 @@ type NVDCVEAPIFeedJSON struct {
 	CVEItems            []*NVDCVEAPIFeedJSONDefCVEItem `json:"cve_items"`
 	Source	string	`json:"source"`
 	FEEDName	string `json:"feed_name"`
+}
+
+type CVEJSON40 struct {
+	Affects     *CVEJSON40Affects     `json:"affects"`
+	CVEDataMeta *CVEJSON40CVEDataMeta `json:"CVE_data_meta"`
+	DataFormat  string                `json:"data_format"`
+	DataType    string                `json:"data_type"`
+	DataVersion string                `json:"data_version"`
+	Description *CVEAPIJSONDescription `json:"description"`
+	Problemtype *CVEJSON40Problemtype `json:"problemtype"`
+	References  *CVEAPIJSONReferences  `json:"references"`
 }

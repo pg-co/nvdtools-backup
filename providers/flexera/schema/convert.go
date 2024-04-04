@@ -20,10 +20,6 @@ import (
 	nvd "github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 )
 
-const (
-	cveDataVersion = "4.0"
-)
-
 // Convert converts  advisories to NVD format
 func (item *Advisory) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	if item.Products == nil {
@@ -51,25 +47,18 @@ func (item *Advisory) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	}
 
 	return &nvd.NVDCVEAPIFeedJSONDefCVEItem{
-		CVE: &nvd.CVEJSON40{
-			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
-				ID:       item.ID(),
-				ASSIGNER: "flexera",
+		Id: item.ID(),
+		SourceIdentifier: "flexera",
+		Descriptions: &nvd.CVEAPIJSONDescription{
+			DescriptionData: []*nvd.CVEJSON40LangString{
+				{Lang: "en", Value: item.Description},
 			},
-			DataFormat:  "MITRE",
-			DataType:    "CVE",
-			DataVersion: cveDataVersion,
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: []*nvd.CVEJSON40LangString{
-					{Lang: "en", Value: item.Description},
-				},
-			},
-			References: item.makeReferences(),
 		},
-		Configurations:   makeConfigurations(cpes),
-		Impact:           item.makeImpact(),
-		LastModified: lastModifiedDate,
-		Published:    publishedDate,
+		Configurations:   	makeConfigurations(cpes),
+		References: 		item.makeReferences(),
+		Metrics:           item.makeImpact(),
+		LastModified: 	   lastModifiedDate,
+		Published:    	   publishedDate,
 	}, nil
 }
 
@@ -77,11 +66,10 @@ func (item *Advisory) ID() string {
 	return "flexera-" + item.AdvisoryIdentifier
 }
 
-func (item *Advisory) makeReferences() *nvd.CVEAPIJSONReferences {
+func (item *Advisory) makeReferences() []*nvd.CVEAPIJSONReference {
 	var refsData []*nvd.CVEAPIJSONReference
-	addRef := func(name, url string) {
+	addRef := func(_, url string) {
 		refsData = append(refsData, &nvd.CVEAPIJSONReference{
-			Name: name,
 			URL:  url,
 		})
 	}
@@ -98,9 +86,7 @@ func (item *Advisory) makeReferences() *nvd.CVEAPIJSONReferences {
 		}
 	}
 
-	return &nvd.CVEAPIJSONReferences{
-		ReferenceData: refsData,
-	}
+	return refsData
 }
 
 func makeConfigurations(cpes []string) *nvd.NVDCVEAPIFeedJSONDefConfigurations {
@@ -113,9 +99,8 @@ func makeConfigurations(cpes []string) *nvd.NVDCVEAPIFeedJSONDefConfigurations {
 	}
 
 	return &nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		CVEDataVersion: cveDataVersion,
 		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
-			&nvd.NVDCVEAPIFeedJSONDefNode{
+			{
 				CPEMatch: matches,
 				Operator: "OR",
 			},
@@ -124,7 +109,7 @@ func makeConfigurations(cpes []string) *nvd.NVDCVEAPIFeedJSONDefConfigurations {
 }
 
 func (item *Advisory) makeImpact() *nvd.NVDCVEAPIFeedJSONDefMetrics {
-	var cvssv2 nvd.CVSSV20
+	var cvssv2 nvd.CVSSData
 	if item.CvssInfo != nil {
 		cvssv2.BaseScore = item.CvssInfo.BaseScore
 		cvssv2.VectorString = item.CvssInfo.Vector
@@ -136,11 +121,11 @@ func (item *Advisory) makeImpact() *nvd.NVDCVEAPIFeedJSONDefMetrics {
 	}
 
 	return &nvd.NVDCVEAPIFeedJSONDefMetrics{
-		BaseMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-			CVSSV2: &cvssv2,
+		CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+			CVSSData: &cvssv2,
 		},
-		BaseMetricV3: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-			CVSSV3: &cvssv3,
+		CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+			CVSSData: &cvssv3,
 		},
 	}
 }

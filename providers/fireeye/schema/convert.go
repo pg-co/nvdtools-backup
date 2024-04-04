@@ -20,31 +20,21 @@ import (
 	nvd "github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 )
 
-const (
-	cveDataVersion = "4.0"
-)
 
 func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	nvdItem := nvd.NVDCVEAPIFeedJSONDefCVEItem{
-		CVE: &nvd.CVEJSON40{
-			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
-				ID:       item.ID(),
-				ASSIGNER: "fireeye",
+		Id: item.ID(),
+		SourceIdentifier: "fireeye",
+		Descriptions: &nvd.CVEAPIJSONDescription{
+			DescriptionData: []*nvd.CVEJSON40LangString{
+				{Lang: "en", Value: item.Title},
 			},
-			DataFormat:  "MITRE",
-			DataType:    "CVE",
-			DataVersion: cveDataVersion,
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: []*nvd.CVEJSON40LangString{
-					{Lang: "en", Value: item.Title},
-				},
-			},
-			References: item.makeReferences(),
 		},
 		Configurations: item.makeConfigurations(),
-		Impact: &nvd.NVDCVEAPIFeedJSONDefMetrics{
-			BaseMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-				CVSSV2: &nvd.CVSSV20{
+		References: item.makeReferences(),
+		Metrics: &nvd.NVDCVEAPIFeedJSONDefMetrics{
+			CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+				CVSSData: &nvd.CVSSData{
 					BaseScore:     extractCVSSBaseScore(item),
 					TemporalScore: extractCVSSTemporalScore(item),
 					VectorString:  extractCVSSVectorString(item),
@@ -62,11 +52,10 @@ func (item *Vulnerability) ID() string {
 	return "fireeye-" + item.ReportID
 }
 
-func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
+func (item *Vulnerability) makeReferences() []*nvd.CVEAPIJSONReference {
 	var refsData []*nvd.CVEAPIJSONReference
-	addRef := func(name, url string) {
+	addRef := func(_, url string) {
 		refsData = append(refsData, &nvd.CVEAPIJSONReference{
-			Name: name,
 			URL:  url,
 		})
 	}
@@ -79,9 +68,7 @@ func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
 		}
 	}
 
-	return &nvd.CVEAPIJSONReferences{
-		ReferenceData: refsData,
-	}
+	return refsData
 }
 
 func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
@@ -94,9 +81,8 @@ func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigu
 	}
 
 	return &nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		CVEDataVersion: cveDataVersion,
 		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
-			&nvd.NVDCVEAPIFeedJSONDefNode{
+			{
 				CPEMatch: matches,
 				Operator: "OR",
 			},

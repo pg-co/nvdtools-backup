@@ -76,11 +76,7 @@ type cveItem struct {
 }
 
 func (c cveItem) ID() string {
-	cve := c.item.CVE
-	if cve != nil && cve.CVEDataMeta != nil {
-		return cve.CVEDataMeta.ID
-	}
-	return ""
+	return c.item.Id
 }
 
 func (c cveItem) Published() time.Time {
@@ -100,26 +96,29 @@ func (c cveItem) Modified() time.Time {
 }
 
 func (c cveItem) Summary() string {
-	cve := c.item.CVE
-	if cve != nil && cve.Description != nil {
+	if c.item.Descriptions != nil {
 		// TODO: handle multi-language descriptions.
-		if len(cve.Description.DescriptionData) > 0 {
-			return cve.Description.DescriptionData[0].Value
+		if len(c.item.Descriptions.DescriptionData) > 0 {
+			return c.item.Descriptions.DescriptionData[0].Value
 		}
 	}
 	return ""
 }
 
 func (c cveItem) BaseScore() float64 {
-	impact := c.item.Impact
-	if impact != nil {
-		v3 := impact.BaseMetricV3
-		if v3 != nil && v3.CVSSV3 != nil && v3.CVSSV3.BaseScore > 0 {
-			return v3.CVSSV3.BaseScore
+	metrics := c.item.Metrics
+	if metrics != nil {
+		v31 := metrics.CVSSMetricV31
+		if v31 != nil && v31.CVSSData != nil && v31.CVSSData.BaseScore > 0 {
+			return v31.CVSSData.BaseScore
 		}
-		v2 := impact.BaseMetricV2
-		if v2 != nil && v2.CVSSV2 != nil {
-			return v2.CVSSV2.BaseScore
+		v30 := metrics.CVSSMetricV30
+		if v30 != nil && v30.CVSSData != nil && v30.CVSSData.BaseScore > 0 {
+			return v30.CVSSData.BaseScore
+		}
+		v2 := metrics.CVSSMetricV2 
+		if v2 != nil && v2.CVSSData != nil {
+			return v2.CVSSData.BaseScore
 		}
 	}
 	return 0

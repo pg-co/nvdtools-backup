@@ -154,7 +154,7 @@ func diffDetails(s *schema.NVDCVEAPIFeedJSONDefCVEItem, bit chunk) bag {
 			"description": englishDescription(s),
 		}
 	case chunkScore:
-		v = s.Impact
+		v = s.Metrics
 	}
 
 	var data bag
@@ -195,7 +195,7 @@ func (s *DiffStats) MarshalJSON() ([]byte, error) {
 }
 
 func englishDescription(s *schema.NVDCVEAPIFeedJSONDefCVEItem) string {
-	for _, d := range s.CVE.Description.DescriptionData {
+	for _, d := range s.Descriptions.DescriptionData {
 		if d.Lang == "en" {
 			return d.Value
 		}
@@ -211,13 +211,13 @@ func sameScoreCVSSV2(a, b *schema.NVDCVEAPIFeedJSONDefCVEItem) bool {
 	var aScore, bScore float64
 	var aVector, bVector string
 
-	if a.Impact.BaseMetricV2 != nil && a.Impact.BaseMetricV2.CVSSV2 != nil {
-		aScore = a.Impact.BaseMetricV2.CVSSV2.BaseScore
-		aVector = a.Impact.BaseMetricV2.CVSSV2.VectorString
+	if a.Metrics.CVSSMetricV2 != nil && a.Metrics.CVSSMetricV2.CVSSData != nil {
+		aScore = a.Metrics.CVSSMetricV2.CVSSData.BaseScore
+		aVector = a.Metrics.CVSSMetricV2.CVSSData.VectorString
 	}
-	if b.Impact.BaseMetricV2 != nil && b.Impact.BaseMetricV2.CVSSV2 != nil {
-		bScore = b.Impact.BaseMetricV2.CVSSV2.BaseScore
-		bVector = b.Impact.BaseMetricV2.CVSSV2.VectorString
+	if b.Metrics.CVSSMetricV2 != nil && b.Metrics.CVSSMetricV2.CVSSData != nil {
+		bScore = b.Metrics.CVSSMetricV2.CVSSData.BaseScore
+		bVector = b.Metrics.CVSSMetricV2.CVSSData.VectorString
 	}
 	return aScore == bScore && aVector == bVector
 }
@@ -226,13 +226,13 @@ func sameScoreCVSSV3(a, b *schema.NVDCVEAPIFeedJSONDefCVEItem) bool {
 	var aScore, bScore float64
 	var aVector, bVector string
 
-	if a.Impact.BaseMetricV3 != nil && a.Impact.BaseMetricV3.CVSSV3 != nil {
-		aScore = a.Impact.BaseMetricV3.CVSSV3.BaseScore
-		aVector = a.Impact.BaseMetricV3.CVSSV3.VectorString
+	if a.Metrics.CVSSMetricV30 != nil && a.Metrics.CVSSMetricV30.CVSSData != nil {
+		aScore = a.Metrics.CVSSMetricV30.CVSSData.BaseScore
+		aVector = a.Metrics.CVSSMetricV30.CVSSData.VectorString
 	}
-	if b.Impact.BaseMetricV3 != nil && b.Impact.BaseMetricV3.CVSSV3 != nil {
-		bScore = b.Impact.BaseMetricV3.CVSSV3.BaseScore
-		bVector = b.Impact.BaseMetricV3.CVSSV3.VectorString
+	if b.Metrics.CVSSMetricV30 != nil && b.Metrics.CVSSMetricV30.CVSSData != nil {
+		bScore = b.Metrics.CVSSMetricV30.CVSSData.BaseScore
+		bVector = b.Metrics.CVSSMetricV30.CVSSData.VectorString
 	}
 	return aScore == bScore && aVector == bVector
 }

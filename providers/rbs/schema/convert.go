@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/facebookincubator/flog"
+	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	nvd "github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	"github.com/facebookincubator/nvdtools/wfn"
 )
@@ -43,25 +44,18 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	}
 
 	nvdItem := nvd.NVDCVEAPIFeedJSONDefCVEItem{
-		CVE: &nvd.CVEJSON40{
-			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
-				ID:       item.ID(),
-				ASSIGNER: "rbs",
+		Id: item.ID(),
+		SourceIdentifier: "rbs",
+		Descriptions: &nvd.CVEAPIJSONDescription{
+			DescriptionData: []*nvd.CVEJSON40LangString{
+				{Lang: "en", Value: item.Title},
+				{Lang: "en", Value: item.Description},
 			},
-			DataFormat:  "MITRE",
-			DataType:    "CVE",
-			DataVersion: cveDataVersion,
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: []*nvd.CVEJSON40LangString{
-					{Lang: "en", Value: item.Title},
-					{Lang: "en", Value: item.Description},
-				},
-			},
-			Problemtype: &nvd.CVEJSON40Problemtype{},
-			References:  item.makeReferences(),
 		},
+		References:  item.makeReferences(),
 		Configurations:   item.makeConfigurations(),
-		Impact:           impact,
+		Metrics:     impact,
+		Weaknesses: []*nvd.CVEAPIJSONWeakness{},
 		LastModified: lastModifiedDate,
 		Published:    publishedDate,
 	}
@@ -75,7 +69,7 @@ func (item *Vulnerability) ID() string {
 	return fmt.Sprintf("rbs-%d", item.VulndbID)
 }
 
-func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
+func (item *Vulnerability) makeReferences() []*nvd.CVEAPIJSONReference {
 	if len(item.ExtReferences) == 0 {
 		return nil
 	}
@@ -84,14 +78,11 @@ func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
 
 	for _, ref := range item.ExtReferences {
 		refsData = append(refsData, &nvd.CVEAPIJSONReference{
-			Name: ref.Type,
 			URL:  ref.Value,
 		})
 	}
 
-	return &nvd.CVEAPIJSONReferences{
-		ReferenceData: refsData,
-	}
+	return refsData
 }
 
 func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
@@ -120,9 +111,8 @@ func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigu
 	}
 
 	conf := nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		CVEDataVersion: cveDataVersion,
 		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
-			&nvd.NVDCVEAPIFeedJSONDefNode{
+			{
 				CPEMatch: matches,
 				Operator: "OR",
 			},
@@ -143,9 +133,9 @@ func (item *Vulnerability) makeImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error
 		return nil, fmt.Errorf("no cvss metrics found")
 	}
 
-	var cvssv2 *nvd.CVSSV20
+	var cvssv2 *nvd.CVSSData
 	if l2 != 0 {
-		cvssv2 = &nvd.CVSSV20{BaseScore: item.CVSSMetrics[l2-1].Score}
+		cvssv2 = &nvd.CVSSData{BaseScore: item.CVSSMetrics[l2-1].Score}
 	}
 
 	var cvssv3 *nvd.CVSSData
@@ -154,8 +144,8 @@ func (item *Vulnerability) makeImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error
 	}
 
 	impact := nvd.NVDCVEAPIFeedJSONDefMetrics{
-		BaseMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{CVSSV2: cvssv2},
-		BaseMetricV3: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{CVSSV3: cvssv3},
+		CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{CVSSData: cvssv2},
+		CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{CVSSData: cvssv3},
 	}
 
 	return &impact, nil
@@ -184,24 +174,26 @@ func normalizeCPE(cpe string) (string, error) {
 }
 
 func addNVDData(nvdItem *nvd.NVDCVEAPIFeedJSONDefCVEItem, additional []*NVDAdditionalInfo) {
-	addRef := func(name, url string) {
-		nvdItem.CVE.References.ReferenceData = append(
-			nvdItem.CVE.References.ReferenceData,
+	addRef := func(_, url string) {
+		nvdItem.References = append(
+			nvdItem.References,
 			&nvd.CVEAPIJSONReference{
-				Name: name,
 				URL:  url,
 			},
 		)
 	}
 
 	addCWE := func(cwe string) {
-		nvdItem.CVE.Problemtype.ProblemtypeData = append(
-			nvdItem.CVE.Problemtype.ProblemtypeData,
-			&nvd.CVEJSON40ProblemtypeProblemtypeData{
-
-				Description: []*nvd.CVEJSON40LangString{
-					{Lang: "en", Value: cwe},
-				},
+		nvdItem.Weaknesses = append(
+			nvdItem.Weaknesses,
+			&nvd.CVEAPIJSONWeakness{
+				Source: "",
+				Type: "",
+				Description: &schema.CVEAPIJSONDescription{
+					DescriptionData: []*nvd.CVEJSON40LangString{
+						{Lang: "en", Value: cwe},
+					},
+				},				
 			},
 		)
 	}

@@ -20,40 +20,30 @@ import (
 	"github.com/facebookincubator/nvdtools/wfn"
 )
 
-const (
-	cveDataVersion = "4.0"
-)
 
 func (advisory *Advisory) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	nvdItem := nvd.NVDCVEAPIFeedJSONDefCVEItem{
-		CVE: &nvd.CVEJSON40{
-			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
-				ID:       advisory.ID(),
-				ASSIGNER: "snyk.io",
-			},
-			DataFormat:  "MITRE",
-			DataType:    "CVE", // TODO: maybe set this to SNYK-$LANG ?
-			DataVersion: cveDataVersion,
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: []*nvd.CVEJSON40LangString{
-					{
-						Lang:  "en",
-						Value: advisory.Description,
-					},
+		Id: advisory.ID(),
+		SourceIdentifier: "snyk.io",
+		Descriptions: &nvd.CVEAPIJSONDescription{
+			DescriptionData: []*nvd.CVEJSON40LangString{
+				{
+					Lang:  "en",
+					Value: advisory.Description,
 				},
 			},
-			Problemtype: advisory.newProblemType(),
-			References:  advisory.newReferences(),
 		},
 		Configurations: advisory.newConfigurations(),
-		Impact: &nvd.NVDCVEAPIFeedJSONDefMetrics{
-			BaseMetricV3: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-				CVSSV3: &nvd.CVSSData{
+		Metrics: &nvd.NVDCVEAPIFeedJSONDefMetrics{
+			CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+				CVSSData: &nvd.CVSSData{
 					VectorString: advisory.CVSSV3Vector,
 					BaseScore:    advisory.CVSSV3BaseScore,
 				},
 			},
 		},
+		Weaknesses: advisory.newProblemType(),
+		References:  advisory.newReferences(),
 		LastModified: snykTimeToNVD(advisory.Modified),
 		Published:    snykTimeToNVD(advisory.Published),
 	}
@@ -65,27 +55,31 @@ func (advisory *Advisory) ID() string {
 	return advisory.SnykID
 }
 
-func (advisory *Advisory) newProblemType() *nvd.CVEJSON40Problemtype {
+func (advisory *Advisory) newProblemType() []*nvd.CVEAPIJSONWeakness {
 	if len(advisory.CweIDs) == 0 {
 		return nil
 	}
-	pt := &nvd.CVEJSON40Problemtype{
-		ProblemtypeData: []*nvd.CVEJSON40ProblemtypeProblemtypeData{
-			{
-				Description: make([]*nvd.CVEJSON40LangString, len(advisory.CweIDs)),
-			},
+
+	w := &nvd.CVEAPIJSONWeakness{
+		Source: "",
+		Type: "",
+		Description: &nvd.CVEAPIJSONDescription{
+			DescriptionData: make([]*nvd.CVEJSON40LangString, len(advisory.CweIDs)),
 		},
 	}
+
 	for i, cwe := range advisory.CweIDs {
-		pt.ProblemtypeData[0].Description[i] = &nvd.CVEJSON40LangString{
+		w.Description.DescriptionData[i] = &nvd.CVEJSON40LangString{
 			Lang:  "en",
 			Value: cwe,
 		}
 	}
-	return pt
+	return []*nvd.CVEAPIJSONWeakness{
+		w,
+	}
 }
 
-func (advisory *Advisory) newReferences() *nvd.CVEAPIJSONReferences {
+func (advisory *Advisory) newReferences() []*nvd.CVEAPIJSONReference {
 	if len(advisory.References) == 0 {
 		return nil
 	}
@@ -93,9 +87,8 @@ func (advisory *Advisory) newReferences() *nvd.CVEAPIJSONReferences {
 	refs := &nvd.CVEAPIJSONReferences{
 		ReferenceData: make([]*nvd.CVEAPIJSONReference, 0, nrefs),
 	}
-	addRef := func(name, url string) {
+	addRef := func(_, url string) {
 		refs.ReferenceData = append(refs.ReferenceData, &nvd.CVEAPIJSONReference{
-			Name: name,
 			URL:  url,
 		})
 	}
@@ -108,12 +101,14 @@ func (advisory *Advisory) newReferences() *nvd.CVEAPIJSONReferences {
 	for _, cve := range advisory.CveIDs {
 		addRef(cve, "")
 	}
-	return refs
+	return refs.ReferenceData
 }
 
 func (advisory *Advisory) newConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
 	nodes := []*nvd.NVDCVEAPIFeedJSONDefNode{
-		&nvd.NVDCVEAPIFeedJSONDefNode{Operator: "OR"},
+		{
+			Operator: "OR",
+		},
 	}
 	var err error
 	var product string
@@ -122,7 +117,7 @@ func (advisory *Advisory) newConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigura
 		product = advisory.Package
 	}
 	cpe := wfn.Attributes{Part: "a", Product: product}
-	cpe22URI := cpe.BindToURI()
+	// cpe22URI := cpe.BindToURI()
 	cpe23URI := cpe.BindToFmtString()
 	for _, versions := range advisory.VulnerableVersions {
 		vRanges, err := parseVersionRange(versions)
@@ -132,12 +127,6 @@ func (advisory *Advisory) newConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigura
 		}
 		for _, vRange := range vRanges {
 			node := &nvd.NVDCVEFeedJSON10DefCPEMatch{
-				CPEName: []*nvd.NVDCVEFeedJSON10DefCPEName{
-					&nvd.NVDCVEFeedJSON10DefCPEName{
-						Cpe22Uri: cpe22URI,
-						Cpe23Uri: cpe23URI,
-					},
-				},
 				Criteria:              cpe23URI,
 				VersionStartIncluding: vRange.minVerIncl,
 				VersionStartExcluding: vRange.minVerExcl,

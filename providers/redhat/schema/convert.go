@@ -41,27 +41,20 @@ func (cve *CVE) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	}
 
 	item := nvd.NVDCVEAPIFeedJSONDefCVEItem{
-		CVE: &nvd.CVEJSON40{
-			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
-				ID:       cve.ID(),
-				ASSIGNER: "redhat",
-			},
-			DataFormat:  "MITRE",
-			DataType:    "CVE",
-			DataVersion: cveVersion,
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: []*nvd.CVEJSON40LangString{
-					{
-						Lang:  "en",
-						Value: strings.Join(cve.Details, "\n"),
-					},
+		Id: cve.ID(),
+		SourceIdentifier: "redhat",
+		Descriptions: &nvd.CVEAPIJSONDescription{
+			DescriptionData: []*nvd.CVEJSON40LangString{
+				{
+					Lang:  "en",
+					Value: strings.Join(cve.Details, "\n"),
 				},
 			},
-			Problemtype: cve.newProblemType(),
-			References:  cve.newReferences(),
 		},
 		Configurations: configurations,
-		Impact:         impact,
+		References:  cve.newReferences(),
+		Weaknesses: cve.newProblemType(),
+		Metrics:    impact,
 		Published:  publishedDate,
 	}
 
@@ -72,24 +65,31 @@ func (cve *CVE) ID() string {
 	return cve.Name
 }
 
-func (cve *CVE) newProblemType() *nvd.CVEJSON40Problemtype {
+func (cve *CVE) newProblemType() []*nvd.CVEAPIJSONWeakness {
 	cwes := findCWEs(cve.CWE)
 	if len(cwes) == 0 {
 		return nil
 	}
-	data := make([]*nvd.CVEJSON40ProblemtypeProblemtypeData, len(cwes))
+	data := make([]*nvd.CVEAPIJSONWeakness, len(cwes))
 	for i, cwe := range cwes {
-		data[i] = &nvd.CVEJSON40ProblemtypeProblemtypeData{
-			Description: []*nvd.CVEJSON40LangString{
-				{Lang: "en", Value: cwe},
+		data[i] = &nvd.CVEAPIJSONWeakness{
+			Source: "",
+			Type: "",
+			Description: &nvd.CVEAPIJSONDescription{
+				DescriptionData: []*nvd.CVEJSON40LangString{
+					{
+						Lang:  "en",
+						Value: cwe,
+					},
+				},
 			},
 		}
 	}
 
-	return &nvd.CVEJSON40Problemtype{ProblemtypeData: data}
+	return data
 }
 
-func (cve *CVE) newReferences() *nvd.CVEAPIJSONReferences {
+func (cve *CVE) newReferences() []*nvd.CVEAPIJSONReference {
 	if len(cve.References) == 0 {
 		return nil
 	}
@@ -99,7 +99,7 @@ func (cve *CVE) newReferences() *nvd.CVEAPIJSONReferences {
 		referenceData[i] = &nvd.CVEAPIJSONReference{URL: ref}
 	}
 
-	return &nvd.CVEAPIJSONReferences{ReferenceData: referenceData}
+	return referenceData
 }
 
 func (cve *CVE) newImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
@@ -114,8 +114,8 @@ func (cve *CVE) newImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse cvss v2 base score: %v", err)
 		}
-		impact.BaseMetricV2 = &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-			CVSSV2: &nvd.CVSSV20{
+		impact.CVSSMetricV2 = &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+			CVSSData: &nvd.CVSSData{
 				BaseScore:    score,
 				VectorString: cve.CVSS.Vector,
 			},
@@ -127,8 +127,8 @@ func (cve *CVE) newImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse cvss v3 base score: %v", err)
 		}
-		impact.BaseMetricV3 = &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-			CVSSV3: &nvd.CVSSData{
+		impact.CVSSMetricV30 = &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+			CVSSData: &nvd.CVSSData{
 				BaseScore:    score,
 				VectorString: cve.CVSS3.Vector,
 			},
@@ -159,7 +159,6 @@ func (cve *CVE) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigurations, er
 	}
 
 	conf := nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		CVEDataVersion: cveVersion,
 		Nodes:          nodes,
 	}
 

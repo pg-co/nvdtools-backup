@@ -54,15 +54,15 @@ func (v *Vuln) Schema() *schema.NVDCVEAPIFeedJSONDefCVEItem {
 
 // ID is a part of the cvefeed.Vuln Interface
 func (v *Vuln) ID() string {
-	if v == nil || v.cveItem == nil || v.cveItem.CVE == nil || v.cveItem.CVE.CVEDataMeta == nil {
+	if v == nil || v.cveItem == nil {
 		return ""
 	}
-	return v.cveItem.CVE.CVEDataMeta.ID
+	return v.cveItem.Id
 }
 
 // CVEs is a part of the cvefeed.Vuln Interface
 func (v *Vuln) CVEs() []string {
-	if v == nil || v.cveItem == nil || v.cveItem.CVE == nil {
+	if v == nil || v.cveItem == nil {
 		return nil
 	}
 
@@ -80,10 +80,10 @@ func (v *Vuln) CVEs() []string {
 	addMatch(v.ID())
 
 	// add references
-	if refs := v.cveItem.CVE.References; refs != nil {
-		for _, refd := range refs.ReferenceData {
+	if refs := v.cveItem.References; refs != nil {
+		for _, refd := range refs {
 			if refd != nil {
-				addMatch(refd.Name)
+				addMatch(refd.URL)
 			}
 		}
 	}
@@ -93,15 +93,15 @@ func (v *Vuln) CVEs() []string {
 
 // CWEs is a part of the cvefeed.Vuln Interface
 func (v *Vuln) CWEs() []string {
-	if v == nil || v.cveItem == nil || v.cveItem.CVE == nil || v.cveItem.CVE.Problemtype == nil {
+	if v == nil || v.cveItem == nil || v.cveItem.Weaknesses == nil {
 		return nil
 	}
 
 	var cwes []string
 
-	for _, ptd := range v.cveItem.CVE.Problemtype.ProblemtypeData {
-		if ptd != nil {
-			for _, desc := range ptd.Description {
+	for _, weakness := range v.cveItem.Weaknesses {
+		if weakness != nil {
+			for _, desc := range weakness.Description.DescriptionData {
 				if desc != nil {
 					if desc.Lang == "en" {
 						cwes = append(cwes, desc.Value)
@@ -160,17 +160,25 @@ func unique(ss []string) []string {
 }
 
 // just a helper to return the cvssv2 data
-func (v *Vuln) cvssv2() *schema.CVSSV20 {
-	if v == nil || v.cveItem == nil || v.cveItem.Impact == nil || v.cveItem.Impact.BaseMetricV2 == nil {
+func (v *Vuln) cvssv2() *schema.CVSSData {
+	if v == nil || v.cveItem == nil || v.cveItem.Metrics == nil || v.cveItem.Metrics.CVSSMetricV2.CVSSData == nil {
 		return nil
 	}
-	return v.cveItem.Impact.BaseMetricV2.CVSSV2
+	return v.cveItem.Metrics.CVSSMetricV2.CVSSData
 }
 
 // just a helper to return the cvssv3 data
 func (v *Vuln) cvssv3() *schema.CVSSData {
-	if v == nil || v.cveItem == nil || v.cveItem.Impact == nil || v.cveItem.Impact.BaseMetricV3 == nil {
+	if v == nil || v.cveItem == nil || v.cveItem.Metrics == nil || v.cveItem.Metrics.CVSSMetricV30.CVSSData == nil {
 		return nil
 	}
-	return v.cveItem.Impact.BaseMetricV3.CVSSV3
+	return v.cveItem.Metrics.CVSSMetricV30.CVSSData
+}
+
+// just a helper to return the cvssv31 data
+func (v *Vuln) cvssv31() *schema.CVSSData {
+	if v == nil || v.cveItem == nil || v.cveItem.Metrics == nil || v.cveItem.Metrics.CVSSMetricV31.CVSSData == nil {
+		return nil
+	}
+	return v.cveItem.Metrics.CVSSMetricV31.CVSSData
 }

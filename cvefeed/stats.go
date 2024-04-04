@@ -123,13 +123,13 @@ func flattenRule(node *schema.NVDCVEAPIFeedJSONDefNode, operators *stack) string
 	cpePart := ""
 	operators.push(node.Operator)
 	switch {
-	case len(node.Children) > 0:
-		outputs := []string{}
-		for _, c := range node.Children {
-			outputs = append(outputs, flattenRule(c, operators))
-		}
-		operator, _ := operators.pop()
-		return fmt.Sprintf("(%s)", strings.Join(outputs, fmt.Sprintf(" %s ", operator)))
+	// case len(node.Children) > 0:
+	// 	outputs := []string{}
+	// 	for _, c := range node.Children {
+	// 		outputs = append(outputs, flattenRule(c, operators))
+	// 	}
+	// 	operator, _ := operators.pop()
+	// 	return fmt.Sprintf("(%s)", strings.Join(outputs, fmt.Sprintf(" %s ", operator)))
 	case len(node.CPEMatch) > 0:
 		for _, cpeMatch := range node.CPEMatch {
 			cpeItems := strings.Split(cpeMatch.Criteria, ":")

@@ -136,24 +136,17 @@ func (item *advisoryItem) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	}
 
 	cve := &nvd.NVDCVEAPIFeedJSONDefCVEItem{
-		CVE: &nvd.CVEJSON40{
-			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
-				ID:       item.ID,
-				ASSIGNER: "RustSec",
-			},
-			DataFormat:  "MITRE",
-			DataType:    "CVE",
-			DataVersion: "4.0",
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: []*nvd.CVEJSON40LangString{
-					{
-						Lang:  "en",
-						Value: item.Description,
-					},
+		Id: item.ID,
+		SourceIdentifier: "RustSec",
+		Descriptions: &nvd.CVEAPIJSONDescription{
+			DescriptionData: []*nvd.CVEJSON40LangString{
+				{
+					Lang:  "en",
+					Value: item.Description,
 				},
 			},
-			References: item.newReferences(),
 		},
+		References: item.newReferences(),
 		Configurations:   conf,
 		LastModified: t.Format(nvd.TimeLayout),
 		Published:    t.Format(nvd.TimeLayout),
@@ -162,7 +155,7 @@ func (item *advisoryItem) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	return cve, nil
 }
 
-func (item *advisoryItem) newReferences() *nvd.CVEAPIJSONReferences {
+func (item *advisoryItem) newReferences() []*nvd.CVEAPIJSONReference {
 	if len(item.References) == 0 {
 		return nil
 	}
@@ -172,9 +165,8 @@ func (item *advisoryItem) newReferences() *nvd.CVEAPIJSONReferences {
 		ReferenceData: make([]*nvd.CVEAPIJSONReference, 0, nrefs),
 	}
 
-	addRef := func(name, url string) {
+	addRef := func(_, url string) {
 		refs.ReferenceData = append(refs.ReferenceData, &nvd.CVEAPIJSONReference{
-			Name: name,
 			URL:  url,
 		})
 	}
@@ -193,10 +185,10 @@ func (item *advisoryItem) newReferences() *nvd.CVEAPIJSONReferences {
 
 	rd := refs.ReferenceData
 	sort.Slice(rd, func(i, j int) bool {
-		return strings.Compare(rd[i].Name, rd[j].Name) < 0
+		return strings.Compare(rd[i].URL, rd[j].URL) < 0
 	})
 
-	return refs
+	return refs.ReferenceData
 }
 
 func (item *advisoryItem) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigurations, error) {
@@ -205,7 +197,7 @@ func (item *advisoryItem) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigur
 		return nil, errors.Wrapf(err, "cannot wfn-ize: %q", item.Package)
 	}
 	cpe := wfn.Attributes{Part: "a", Product: pkg}
-	cpe22uri := cpe.BindToURI()
+	// cpe22uri := cpe.BindToURI()
 	cpe23uri := cpe.BindToFmtString()
 
 	matches := []*nvd.NVDCVEFeedJSON10DefCPEMatch{}
@@ -226,15 +218,9 @@ func (item *advisoryItem) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigur
 				return nil, errors.Wrapf(err, "cannot wfn-ize version: %q", curver)
 			}
 			cpe := wfn.Attributes{Part: "a", Product: pkg, Version: wfnver}
-			cpe22uri := cpe.BindToURI()
+			// cpe22uri := cpe.BindToURI()
 			cpe23uri := cpe.BindToFmtString()
 			match := &nvd.NVDCVEFeedJSON10DefCPEMatch{
-				CPEName: []*nvd.NVDCVEFeedJSON10DefCPEName{
-					{
-						Cpe22Uri: cpe22uri,
-						Cpe23Uri: cpe23uri,
-					},
-				},
 				Criteria:   cpe23uri,
 				Vulnerable: version[:1] == "=",
 			}
@@ -242,12 +228,6 @@ func (item *advisoryItem) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigur
 
 		case ">", "<":
 			match := &nvd.NVDCVEFeedJSON10DefCPEMatch{
-				CPEName: []*nvd.NVDCVEFeedJSON10DefCPEName{
-					{
-						Cpe22Uri: cpe22uri,
-						Cpe23Uri: cpe23uri,
-					},
-				},
 				Criteria:   cpe23uri,
 				Vulnerable: false, // these are patched + unaffected versions
 			}
@@ -272,31 +252,30 @@ func (item *advisoryItem) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigur
 	}
 
 	conf := &nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		CVEDataVersion: "4.0",
 		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
 			{
 				Operator: "AND",
-				Children: []*nvd.NVDCVEAPIFeedJSONDefNode{
-					{
-						CPEMatch: []*nvd.NVDCVEFeedJSON10DefCPEMatch{
-							{
-								CPEName: []*nvd.NVDCVEFeedJSON10DefCPEName{
-									{
-										Cpe22Uri: cpe22uri,
-										Cpe23Uri: cpe23uri,
-									},
-								},
-								Criteria:              cpe23uri,
-								Vulnerable:            false,
-								VersionStartIncluding: "0",
-							},
-						},
-					},
-					{
-						Negate:   true,
-						CPEMatch: matches,
-					},
-				},
+				// Children: []*nvd.NVDCVEAPIFeedJSONDefNode{
+				// 	{
+				// 		CPEMatch: []*nvd.NVDCVEFeedJSON10DefCPEMatch{
+				// 			{
+				// 				CPEName: []*nvd.NVDCVEFeedJSON10DefCPEName{
+				// 					{
+				// 						Cpe22Uri: cpe22uri,
+				// 						Cpe23Uri: cpe23uri,
+				// 					},
+				// 				},
+				// 				Criteria:              cpe23uri,
+				// 				Vulnerable:            false,
+				// 				VersionStartIncluding: "0",
+				// 			},
+				// 		},
+				// 	},
+				// 	{
+				// 		Negate:   true,
+				// 		CPEMatch: matches,
+				// 	},
+				// },
 			},
 		},
 	}
