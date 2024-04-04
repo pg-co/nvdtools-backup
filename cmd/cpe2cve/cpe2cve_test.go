@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -50,7 +51,15 @@ func TestAppendAt(t *testing.T) {
 	}
 }
 
+
 func TestProcessInput(t *testing.T) {
+	data, err := ioutil.ReadFile("C:\\Users\\pgenz\\Desktop\\Vuln\\nvdtools-backup\\cmd\\cpe2cve\\CVE-2024.json")
+	if err != nil {
+		t.Fatalf("couldn't read json: %v", err)
+	}
+
+
+
 	cases := []struct {
 		in  string
 		out [][]string
@@ -71,7 +80,7 @@ func TestProcessInput(t *testing.T) {
 		// TODO: add more test cases
 	}
 	testDictJSON, err := cvefeed.LoadFeed(func(_ string) ([]cvefeed.Vuln, error) {
-		return cvefeed.ParseJSON(bytes.NewBufferString(testDictJSONStr))
+		return cvefeed.ParseJSON(bytes.NewBufferString(string(data)))
 	}, "")
 	if err != nil {
 		t.Fatalf("couldn't parse JSON dictionary: %v", err)

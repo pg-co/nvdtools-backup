@@ -35,10 +35,12 @@ func (advisory *Advisory) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 		},
 		Configurations: advisory.newConfigurations(),
 		Metrics: &nvd.NVDCVEAPIFeedJSONDefMetrics{
-			CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-				CVSSData: &nvd.CVSSData{
-					VectorString: advisory.CVSSV3Vector,
-					BaseScore:    advisory.CVSSV3BaseScore,
+			CVSSMetricV30: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+				{
+					CVSSData: &nvd.CVSSData{
+						BaseScore:    advisory.CVSSV3BaseScore,
+						VectorString: advisory.CVSSV3Vector,
+					},
 				},
 			},
 		},
@@ -63,13 +65,11 @@ func (advisory *Advisory) newProblemType() []*nvd.CVEAPIJSONWeakness {
 	w := &nvd.CVEAPIJSONWeakness{
 		Source: "",
 		Type: "",
-		Description: &nvd.CVEAPIJSONDescription{
-			DescriptionData: make([]*nvd.CVEJSON40LangString, len(advisory.CweIDs)),
-		},
+		Description: make([]*nvd.CVEJSON40LangString, len(advisory.CweIDs)),
 	}
 
 	for i, cwe := range advisory.CweIDs {
-		w.Description.DescriptionData[i] = &nvd.CVEJSON40LangString{
+		w.Description[i] = &nvd.CVEJSON40LangString{
 			Lang:  "en",
 			Value: cwe,
 		}
@@ -104,7 +104,7 @@ func (advisory *Advisory) newReferences() []*nvd.CVEAPIJSONReference {
 	return refs.ReferenceData
 }
 
-func (advisory *Advisory) newConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
+func (advisory *Advisory) newConfigurations() []*nvd.NVDCVEAPIFeedJSONDefNode {
 	nodes := []*nvd.NVDCVEAPIFeedJSONDefNode{
 		{
 			Operator: "OR",
@@ -137,7 +137,5 @@ func (advisory *Advisory) newConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigura
 			nodes[0].CPEMatch = append(nodes[0].CPEMatch, node)
 		}
 	}
-	return &nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		Nodes: nodes,
-	}
+	return nodes
 }

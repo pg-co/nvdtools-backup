@@ -108,12 +108,14 @@ func (s *Stats) Gather(dict Dictionary) {
 	for key := range dict {
 		s.totalCVEs++
 		schema := dict[key].(*nvd.Vuln).Schema()
-		for _, node := range schema.Configurations.Nodes {
-			s.totalRules++
-			rule := flattenRule(node, &stack{})
-			if strings.Contains(rule, "AND") {
-				s.totalRulesWithAND++
-				s.operatorANDs[rule]++
+		for _, conf := range schema.Configurations {
+			for _, node := range conf.Nodes {
+				s.totalRules++
+				rule := flattenRule(node, &stack{})
+				if strings.Contains(rule, "AND") {
+					s.totalRulesWithAND++
+					s.operatorANDs[rule]++
+				}
 			}
 		}
 	}

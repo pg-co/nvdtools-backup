@@ -129,11 +129,15 @@ func ProvidersNewItem(item *ProvidersItem) (*nvd.NVDCVEAPIFeedJSONDefCVEItem, er
 		References:  item.references(),
 		Configurations: item.Configuration.convertToNVD(),
 		Metrics: &nvd.NVDCVEAPIFeedJSONDefMetrics{
-			CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-				CVSSData: item.cvssV20(),
+			CVSSMetricV2: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+				{
+					CVSSData: item.cvssV20(),
+				},
 			},
-			CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-				CVSSData: item.cvssV30(),
+			CVSSMetricV30: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+				{
+					CVSSData: item.cvssV30(),
+				},
 			},
 		},
 		LastModified: providersConvertTime(item.LastModifiedDate),
@@ -148,7 +152,7 @@ func (item *ProvidersItem) validate() error {
 	}
 
 	if item.Configuration == nil {
-		return errors.New("Configuration can't be nil")
+		return errors.New("configuration can't be nil")
 	}
 
 	return nil
@@ -204,9 +208,7 @@ func (item *ProvidersItem) problemType() []*nvd.CVEAPIJSONWeakness {
 		{
 			Source: "",
 			Type: "",
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: weaknesses,
-			},
+			Description: weaknesses,
 		},
 	}
 }
@@ -230,7 +232,7 @@ func ProvidersNewConfiguration() *ProvidersConfiguration {
 	}
 }
 
-func (c *ProvidersConfiguration) convertToNVD() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
+func (c *ProvidersConfiguration) convertToNVD() []*nvd.NVDCVEAPIFeedJSONDefNode {
 	var nvdNodes []*nvd.NVDCVEAPIFeedJSONDefNode
 
 	for _, node := range c.Nodes {
@@ -256,9 +258,7 @@ func (c *ProvidersConfiguration) convertToNVD() *nvd.NVDCVEAPIFeedJSONDefConfigu
 		nvdNodes = append(nvdNodes, nvdNode)
 	}
 
-	return &nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		Nodes:          nvdNodes,
-	}
+	return nvdNodes
 }
 
 // NewNode creates a Node in the ProvidersConfiguration

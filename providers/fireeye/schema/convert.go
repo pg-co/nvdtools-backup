@@ -33,11 +33,13 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 		Configurations: item.makeConfigurations(),
 		References: item.makeReferences(),
 		Metrics: &nvd.NVDCVEAPIFeedJSONDefMetrics{
-			CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-				CVSSData: &nvd.CVSSData{
-					BaseScore:     extractCVSSBaseScore(item),
-					TemporalScore: extractCVSSTemporalScore(item),
-					VectorString:  extractCVSSVectorString(item),
+			CVSSMetricV2: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+				{
+					CVSSData: &nvd.CVSSData{
+						BaseScore:     extractCVSSBaseScore(item),
+						TemporalScore: extractCVSSTemporalScore(item),
+						VectorString:  extractCVSSVectorString(item),
+					},
 				},
 			},
 		},
@@ -71,7 +73,7 @@ func (item *Vulnerability) makeReferences() []*nvd.CVEAPIJSONReference {
 	return refsData
 }
 
-func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
+func (item *Vulnerability) makeConfigurations() []*nvd.NVDCVEAPIFeedJSONDefNode {
 	var matches []*nvd.NVDCVEFeedJSON10DefCPEMatch
 	for _, cpe := range extractCPEs(item) {
 		matches = append(matches, &nvd.NVDCVEFeedJSON10DefCPEMatch{
@@ -80,12 +82,10 @@ func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigu
 		})
 	}
 
-	return &nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
-			{
-				CPEMatch: matches,
-				Operator: "OR",
-			},
+	return []*nvd.NVDCVEAPIFeedJSONDefNode{
+		{
+			CPEMatch: matches,
+			Operator: "OR",
 		},
 	}
 }

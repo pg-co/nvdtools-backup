@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/facebookincubator/flog"
-	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	nvd "github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	"github.com/facebookincubator/nvdtools/wfn"
 )
@@ -85,7 +84,7 @@ func (item *Vulnerability) makeReferences() []*nvd.CVEAPIJSONReference {
 	return refsData
 }
 
-func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
+func (item *Vulnerability) makeConfigurations()  []*nvd.NVDCVEAPIFeedJSONDefNode {
 	var matches []*nvd.NVDCVEFeedJSON10DefCPEMatch
 
 	for _, vendor := range item.Vendors {
@@ -110,16 +109,14 @@ func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigu
 		}
 	}
 
-	conf := nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
-			{
-				CPEMatch: matches,
-				Operator: "OR",
-			},
+	conf := []*nvd.NVDCVEAPIFeedJSONDefNode{
+		{
+			CPEMatch: matches,
+			Operator: "OR",
 		},
 	}
 
-	return &conf
+	return conf
 }
 
 func (item *Vulnerability) makeImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
@@ -144,8 +141,16 @@ func (item *Vulnerability) makeImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error
 	}
 
 	impact := nvd.NVDCVEAPIFeedJSONDefMetrics{
-		CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{CVSSData: cvssv2},
-		CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{CVSSData: cvssv3},
+		CVSSMetricV2: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+			{
+				CVSSData: cvssv2,
+			},
+		},
+		CVSSMetricV30: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+			{
+				CVSSData: cvssv3,
+			},
+		},
 	}
 
 	return &impact, nil
@@ -189,10 +194,8 @@ func addNVDData(nvdItem *nvd.NVDCVEAPIFeedJSONDefCVEItem, additional []*NVDAddit
 			&nvd.CVEAPIJSONWeakness{
 				Source: "",
 				Type: "",
-				Description: &schema.CVEAPIJSONDescription{
-					DescriptionData: []*nvd.CVEJSON40LangString{
-						{Lang: "en", Value: cwe},
-					},
+				Description: []*nvd.CVEJSON40LangString{
+					{Lang: "en", Value: cwe},
 				},				
 			},
 		)

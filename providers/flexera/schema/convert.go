@@ -89,7 +89,7 @@ func (item *Advisory) makeReferences() []*nvd.CVEAPIJSONReference {
 	return refsData
 }
 
-func makeConfigurations(cpes []string) *nvd.NVDCVEAPIFeedJSONDefConfigurations {
+func makeConfigurations(cpes []string) []*nvd.NVDCVEAPIFeedJSONDefNode {
 	matches := make([]*nvd.NVDCVEFeedJSON10DefCPEMatch, len(cpes))
 	for i, cpe := range cpes {
 		matches[i] = &nvd.NVDCVEFeedJSON10DefCPEMatch{
@@ -98,12 +98,10 @@ func makeConfigurations(cpes []string) *nvd.NVDCVEAPIFeedJSONDefConfigurations {
 		}
 	}
 
-	return &nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
-			{
-				CPEMatch: matches,
-				Operator: "OR",
-			},
+	return []*nvd.NVDCVEAPIFeedJSONDefNode{
+		{
+			CPEMatch: matches,
+			Operator: "OR",
 		},
 	}
 }
@@ -121,11 +119,15 @@ func (item *Advisory) makeImpact() *nvd.NVDCVEAPIFeedJSONDefMetrics {
 	}
 
 	return &nvd.NVDCVEAPIFeedJSONDefMetrics{
-		CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-			CVSSData: &cvssv2,
+		CVSSMetricV2: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+			{
+				CVSSData: &cvssv2,
+			},
 		},
-		CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-			CVSSData: &cvssv3,
+		CVSSMetricV30: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+			{
+				CVSSData: &cvssv3,
+			},
 		},
 	}
 }

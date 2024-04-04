@@ -181,7 +181,7 @@ type CVEAPIJSONDescription struct {
 // NVDCVEAPIFeedJSONDefNode was auto-generated.
 // Defines a node or sub-node in an NVD applicability statement.
 type NVDCVEAPIFeedJSONDefNode struct {
-	CPEMatch []*NVDCVEFeedJSON10DefCPEMatch `json:"cpe_match,omitempty"`
+	CPEMatch []*NVDCVEFeedJSON10DefCPEMatch `json:"cpeMatch,omitempty"`
 	// Children []*NVDCVEFeedJSON10DefNode     `json:"children,omitempty"`
 	Negate   bool                           `json:"negate,omitempty"`
 	Operator string                         `json:"operator,omitempty"`
@@ -210,13 +210,15 @@ type CVEAPIJSONReferences struct {
 type CVEAPIJSONWeakness struct {
 	Source			string 						`json:"source"`
 	Type			string 						`json:"type"`
-	Description	 	*CVEAPIJSONDescription 		`json:"description"`
+	Description	 	[]*CVEJSON40LangString 		`json:"description"`
 }
 
 
 // NVDCVEAPIFeedJSONDefImpactBaseMetricV2 was auto-generated.
 // CVSS V2.0 score.
 type NVDCVEAPIFeedJSONDefImpactBaseMetricV2 struct {
+	Source 				string	 `json:"source"`
+	Type				string	 `json:"type,omitempty"`
 	CVSSData                  *CVSSData `json:"cvssData,omitempty"`
 	BaseSeverity                string   `json:"baseSeverity,omitempty"`
 	ExploitabilityScore     float64  `json:"exploitabilityScore,omitempty"`
@@ -241,10 +243,47 @@ type NVDCVEAPIFeedJSONDefImpactBaseMetricV31 struct {
 // NVDCVEAPIFeedJSONDefMetrics was auto-generated.
 // Impact scores for a vulnerability as found on NVD.
 type NVDCVEAPIFeedJSONDefMetrics struct {
-	CVSSMetricV2 *NVDCVEAPIFeedJSONDefImpactBaseMetricV2 `json:"cvssMetricV2,omitempty"`
-	CVSSMetricV31 *NVDCVEAPIFeedJSONDefImpactBaseMetricV31 `json:"cvssMetricV31,omitempty"`
-	CVSSMetricV30 *NVDCVEAPIFeedJSONDefImpactBaseMetricV31 `json:"cvssMetricV30,omitempty"`
+	CVSSMetricV2 []*NVDCVEAPIFeedJSONDefImpactBaseMetricV2 `json:"cvssMetricV2,omitempty"`
+	CVSSMetricV30 []*NVDCVEAPIFeedJSONDefImpactBaseMetricV31 `json:"cvssMetricV30,omitempty"`
+	CVSSMetricV31 []*NVDCVEAPIFeedJSONDefImpactBaseMetricV31 `json:"cvssMetricV31,omitempty"`
 }
+
+func (n *NVDCVEAPIFeedJSONDefMetrics) GetPrimaryV2() *NVDCVEAPIFeedJSONDefImpactBaseMetricV2 {
+	if n.CVSSMetricV2 != nil && len(n.CVSSMetricV2) > 0 {
+		for _, tmp := range n.CVSSMetricV2 {
+			if tmp.Type != "" && tmp.Type == "Primary" {
+				return tmp
+			}
+		}
+		return n.CVSSMetricV2[0]
+	}
+	return nil
+} 
+
+func (n *NVDCVEAPIFeedJSONDefMetrics) GetPrimaryV30() *NVDCVEAPIFeedJSONDefImpactBaseMetricV31 {
+	if n.CVSSMetricV30 != nil && len(n.CVSSMetricV30) > 0 {
+		for _, tmp := range n.CVSSMetricV30 {
+			if tmp.Type != "" && tmp.Type == "Primary" {
+				return tmp
+			}
+		}
+		return n.CVSSMetricV30[0]
+	}
+	return nil
+} 
+
+func (n *NVDCVEAPIFeedJSONDefMetrics) GetPrimaryV31() *NVDCVEAPIFeedJSONDefImpactBaseMetricV31 {
+	if n.CVSSMetricV31 != nil && len(n.CVSSMetricV31) > 0 {
+		for _, tmp := range n.CVSSMetricV31 {
+			if tmp.Type != "" && tmp.Type == "Primary" {
+				return tmp
+			}
+		}
+		return n.CVSSMetricV31[0]
+	}
+	return nil
+} 
+
 
 
 // NVDCVEAPIFeedJSONDefCVEItem was auto-generated.
@@ -256,20 +295,20 @@ type NVDCVEAPIFeedJSONDefCVEItem struct {
 	LastModified 	 string                             `json:"lastModified,omitempty"`
 	VulnStatus 		 string								`json:"vulnStatus,omitempty"`
 	Descriptions	 *CVEAPIJSONDescription				`json:"description"`
-	Metrics			 *NVDCVEAPIFeedJSONDefMetrics		`json:"metrics"`
+	Metrics			 *NVDCVEAPIFeedJSONDefMetrics		`json:"metrics,omitempty"`
 	Weaknesses		 []*CVEAPIJSONWeakness				`json:"weaknesses,omitempty"`
-	Configurations   *NVDCVEAPIFeedJSONDefConfigurations `json:"configurations,omitempty"`
-	References		 []*CVEAPIJSONReference			 `json:"references"`
+	Configurations   []*NVDCVEAPIFeedJSONDefConfigurations 		`json:"configurations,omitempty"`
+	References		 []*CVEAPIJSONReference			 	`json:"references"`
 }
 
 // NVDCVEAPIFeedJSON was auto-generated.
 // Source: https://csrc.nist.gov/schema/nvd/feed/1.0/nvd_cve_feed_json_1.0.schema
 type NVDCVEAPIFeedJSON struct {
-	CVECount string                        `json:"cve_count,omitempty"`
+	CVECount 	 uint32                        `json:"cve_count,omitempty"`
 	Timestamp    string                        `json:"timestamp,omitempty"`
-	CVEItems            []*NVDCVEAPIFeedJSONDefCVEItem `json:"cve_items"`
-	Source	string	`json:"source"`
-	FEEDName	string `json:"feed_name"`
+	CVEItems     []*NVDCVEAPIFeedJSONDefCVEItem `json:"cve_items"`
+	Source		 string	`json:"source"`
+	FEEDName	 string `json:"feed_name"`
 }
 
 type CVEJSON40 struct {

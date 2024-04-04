@@ -75,12 +75,10 @@ func (cve *CVE) newProblemType() []*nvd.CVEAPIJSONWeakness {
 		data[i] = &nvd.CVEAPIJSONWeakness{
 			Source: "",
 			Type: "",
-			Description: &nvd.CVEAPIJSONDescription{
-				DescriptionData: []*nvd.CVEJSON40LangString{
-					{
-						Lang:  "en",
-						Value: cwe,
-					},
+			Description: []*nvd.CVEJSON40LangString{
+				{
+					Lang:  "en",
+					Value: cwe,
 				},
 			},
 		}
@@ -114,10 +112,12 @@ func (cve *CVE) newImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse cvss v2 base score: %v", err)
 		}
-		impact.CVSSMetricV2 = &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-			CVSSData: &nvd.CVSSData{
-				BaseScore:    score,
-				VectorString: cve.CVSS.Vector,
+		impact.CVSSMetricV2 = []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+			{
+				CVSSData: &nvd.CVSSData{
+					BaseScore:    score,
+					VectorString: cve.CVSS.Vector,
+				},
 			},
 		}
 	}
@@ -127,10 +127,12 @@ func (cve *CVE) newImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse cvss v3 base score: %v", err)
 		}
-		impact.CVSSMetricV30 = &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-			CVSSData: &nvd.CVSSData{
-				BaseScore:    score,
-				VectorString: cve.CVSS3.Vector,
+		impact.CVSSMetricV30 = []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+			{
+				CVSSData: &nvd.CVSSData{
+					BaseScore:    score,
+					VectorString: cve.CVSS3.Vector,
+				},
 			},
 		}
 	}
@@ -140,7 +142,7 @@ func (cve *CVE) newImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
 
 // CPEs configuration, AKA the tricky part
 
-func (cve *CVE) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigurations, error) {
+func (cve *CVE) newConfigurations() ([]*nvd.NVDCVEAPIFeedJSONDefNode, error) {
 	nodes := make([]*nvd.NVDCVEAPIFeedJSONDefNode, len(cve.AffectedRelease)+len(cve.PackageState))
 
 	var err error
@@ -157,12 +159,7 @@ func (cve *CVE) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigurations, er
 			return nil, fmt.Errorf("can't create node for package state %d: %v", i, err)
 		}
 	}
-
-	conf := nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		Nodes:          nodes,
-	}
-
-	return &conf, nil
+	return nodes, nil
 }
 
 func (ar *AffectedRelease) createNode() (*nvd.NVDCVEAPIFeedJSONDefNode, error) {

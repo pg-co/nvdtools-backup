@@ -211,13 +211,15 @@ func sameScoreCVSSV2(a, b *schema.NVDCVEAPIFeedJSONDefCVEItem) bool {
 	var aScore, bScore float64
 	var aVector, bVector string
 
-	if a.Metrics.CVSSMetricV2 != nil && a.Metrics.CVSSMetricV2.CVSSData != nil {
-		aScore = a.Metrics.CVSSMetricV2.CVSSData.BaseScore
-		aVector = a.Metrics.CVSSMetricV2.CVSSData.VectorString
+	primary1 := a.Metrics.GetPrimaryV2()
+	if primary1 != nil && primary1.CVSSData != nil {
+		aScore = primary1.CVSSData.BaseScore
+		aVector = primary1.CVSSData.VectorString
 	}
-	if b.Metrics.CVSSMetricV2 != nil && b.Metrics.CVSSMetricV2.CVSSData != nil {
-		bScore = b.Metrics.CVSSMetricV2.CVSSData.BaseScore
-		bVector = b.Metrics.CVSSMetricV2.CVSSData.VectorString
+	primary2 := b.Metrics.GetPrimaryV2()
+	if primary2 != nil && primary2.CVSSData != nil {
+		bScore = primary2.CVSSData.BaseScore
+		bVector = primary2.CVSSData.VectorString
 	}
 	return aScore == bScore && aVector == bVector
 }
@@ -226,13 +228,15 @@ func sameScoreCVSSV3(a, b *schema.NVDCVEAPIFeedJSONDefCVEItem) bool {
 	var aScore, bScore float64
 	var aVector, bVector string
 
-	if a.Metrics.CVSSMetricV30 != nil && a.Metrics.CVSSMetricV30.CVSSData != nil {
-		aScore = a.Metrics.CVSSMetricV30.CVSSData.BaseScore
-		aVector = a.Metrics.CVSSMetricV30.CVSSData.VectorString
+	primary1 := a.Metrics.GetPrimaryV30()
+	primary2 := b.Metrics.GetPrimaryV30()
+	if primary1 != nil && primary1.CVSSData != nil {
+		aScore = primary1.CVSSData.BaseScore
+		aVector = primary1.CVSSData.VectorString
 	}
-	if b.Metrics.CVSSMetricV30 != nil && b.Metrics.CVSSMetricV30.CVSSData != nil {
-		bScore = b.Metrics.CVSSMetricV30.CVSSData.BaseScore
-		bVector = b.Metrics.CVSSMetricV30.CVSSData.VectorString
+	if primary2 != nil && primary2.CVSSData != nil {
+		bScore = primary2.CVSSData.BaseScore
+		bVector = primary2.CVSSData.VectorString
 	}
 	return aScore == bScore && aVector == bVector
 }

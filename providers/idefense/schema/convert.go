@@ -20,7 +20,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-
 // Convert implements runner.Convertible interface
 func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	lastModifiedDate, err := convertTime(item.LastModified)
@@ -47,18 +46,22 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 		},
 		Configurations: configurations,
 		Metrics: &nvd.NVDCVEAPIFeedJSONDefMetrics{
-			CVSSMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
-				CVSSData: &nvd.CVSSData{
-					BaseScore:     item.Cvss2BaseScore,
-					TemporalScore: item.Cvss2TemporalScore,
-					VectorString:  item.Cvss2,
+			CVSSMetricV2: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
+				{
+					CVSSData: &nvd.CVSSData{
+						BaseScore:     item.Cvss2BaseScore,
+						TemporalScore: item.Cvss2TemporalScore,
+						VectorString:  item.Cvss2,
+					},
 				},
 			},
-			CVSSMetricV30: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
-				CVSSData: &nvd.CVSSData{
-					BaseScore:     item.Cvss3BaseScore,
-					TemporalScore: item.Cvss3TemporalScore,
-					VectorString:  item.Cvss3,
+			CVSSMetricV30: []*nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+				{
+					CVSSData: &nvd.CVSSData{
+						BaseScore:     item.Cvss3BaseScore,
+						TemporalScore: item.Cvss3TemporalScore,
+						VectorString:  item.Cvss3,
+					},
 				},
 			},
 		},
@@ -66,10 +69,8 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 			{
 				Source: "",
 				Type: "",
-				Description: &nvd.CVEAPIJSONDescription{
-					DescriptionData: []*nvd.CVEJSON40LangString{
+				Description: []*nvd.CVEJSON40LangString{
 						{Lang: "en", Value: item.Cwe},
-					},
 				},
 			},
 		},
@@ -113,7 +114,7 @@ func (item *Vulnerability) makeReferences() []*nvd.CVEAPIJSONReference {
 	return refsData
 }
 
-func (item *Vulnerability) makeConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigurations, error) {
+func (item *Vulnerability) makeConfigurations() ([]*nvd.NVDCVEAPIFeedJSONDefNode, error) {
 	configs := item.findConfigurations()
 	if len(configs) == 0 {
 		return nil, errors.New("unable to find any configurations in data")
@@ -144,14 +145,12 @@ func (item *Vulnerability) makeConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfig
 		}
 	}
 
-	v := nvd.NVDCVEAPIFeedJSONDefConfigurations{
-		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
-			{
-				CPEMatch: matches,
-				Operator: "OR",
-			},
+	v := []*nvd.NVDCVEAPIFeedJSONDefNode{
+		{
+			CPEMatch: matches,
+			Operator: "OR",
 		},
 	}
 
-	return &v, nil
+	return v, nil
 }

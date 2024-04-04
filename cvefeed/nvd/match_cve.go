@@ -29,10 +29,12 @@ func ToVuln(cve *schema.NVDCVEAPIFeedJSONDefCVEItem) *Vuln {
 	}
 
 	var ms []wfn.Matcher
-	for _, node := range cve.Configurations.Nodes {
-		if node != nil {
-			if m, err := nodeMatcher(vuln.ID(), node); err == nil {
-				ms = append(ms, m)
+	for _, conf := range cve.Configurations {
+		for _, node := range conf.Nodes {
+			if node != nil {
+				if m, err := nodeMatcher(vuln.ID(), node); err == nil {
+					ms = append(ms, m)
+				}
 			}
 		}
 	}
@@ -101,7 +103,7 @@ func (v *Vuln) CWEs() []string {
 
 	for _, weakness := range v.cveItem.Weaknesses {
 		if weakness != nil {
-			for _, desc := range weakness.Description.DescriptionData {
+			for _, desc := range weakness.Description {
 				if desc != nil {
 					if desc.Lang == "en" {
 						cwes = append(cwes, desc.Value)
@@ -161,24 +163,30 @@ func unique(ss []string) []string {
 
 // just a helper to return the cvssv2 data
 func (v *Vuln) cvssv2() *schema.CVSSData {
-	if v == nil || v.cveItem == nil || v.cveItem.Metrics == nil || v.cveItem.Metrics.CVSSMetricV2.CVSSData == nil {
-		return nil
+	if v != nil && v.cveItem != nil && v.cveItem.Metrics != nil {
+		if primary := v.cveItem.Metrics.GetPrimaryV2(); primary != nil {
+			return primary.CVSSData
+		}
 	}
-	return v.cveItem.Metrics.CVSSMetricV2.CVSSData
+	return nil
 }
 
 // just a helper to return the cvssv3 data
 func (v *Vuln) cvssv3() *schema.CVSSData {
-	if v == nil || v.cveItem == nil || v.cveItem.Metrics == nil || v.cveItem.Metrics.CVSSMetricV30.CVSSData == nil {
-		return nil
+	if v != nil && v.cveItem != nil && v.cveItem.Metrics != nil {
+		if primary := v.cveItem.Metrics.GetPrimaryV30(); primary != nil {
+			return primary.CVSSData
+		}
 	}
-	return v.cveItem.Metrics.CVSSMetricV30.CVSSData
+	return nil
 }
 
 // just a helper to return the cvssv31 data
 func (v *Vuln) cvssv31() *schema.CVSSData {
-	if v == nil || v.cveItem == nil || v.cveItem.Metrics == nil || v.cveItem.Metrics.CVSSMetricV31.CVSSData == nil {
-		return nil
+	if v != nil && v.cveItem != nil && v.cveItem.Metrics != nil {
+		if primary := v.cveItem.Metrics.GetPrimaryV31(); primary != nil {
+			return primary.CVSSData
+		}
 	}
-	return v.cveItem.Metrics.CVSSMetricV31.CVSSData
+	return nil
 }

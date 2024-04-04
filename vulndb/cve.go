@@ -108,16 +108,20 @@ func (c cveItem) Summary() string {
 func (c cveItem) BaseScore() float64 {
 	metrics := c.item.Metrics
 	if metrics != nil {
-		v31 := metrics.CVSSMetricV31
-		if v31 != nil && v31.CVSSData != nil && v31.CVSSData.BaseScore > 0 {
-			return v31.CVSSData.BaseScore
+		v31 := metrics.GetPrimaryV31()
+		if v31 != nil {
+			if v31.CVSSData.BaseScore > 0 {
+				return v31.CVSSData.BaseScore
+			}
 		}
-		v30 := metrics.CVSSMetricV30
-		if v30 != nil && v30.CVSSData != nil && v30.CVSSData.BaseScore > 0 {
-			return v30.CVSSData.BaseScore
+		v30 := metrics.GetPrimaryV30()
+		if v30 != nil {
+			if v30.CVSSData.BaseScore > 0 {
+				return v30.CVSSData.BaseScore
+			}
 		}
-		v2 := metrics.CVSSMetricV2 
-		if v2 != nil && v2.CVSSData != nil {
+		v2 := metrics.GetPrimaryV2()
+		if v2 != nil {
 			return v2.CVSSData.BaseScore
 		}
 	}
