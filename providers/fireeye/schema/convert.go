@@ -24,8 +24,8 @@ const (
 	cveDataVersion = "4.0"
 )
 
-func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
-	nvdItem := nvd.NVDCVEFeedJSON10DefCVEItem{
+func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
+	nvdItem := nvd.NVDCVEAPIFeedJSONDefCVEItem{
 		CVE: &nvd.CVEJSON40{
 			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
 				ID:       item.ID(),
@@ -34,7 +34,7 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 			DataFormat:  "MITRE",
 			DataType:    "CVE",
 			DataVersion: cveDataVersion,
-			Description: &nvd.CVEJSON40Description{
+			Description: &nvd.CVEAPIJSONDescription{
 				DescriptionData: []*nvd.CVEJSON40LangString{
 					{Lang: "en", Value: item.Title},
 				},
@@ -42,8 +42,8 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 			References: item.makeReferences(),
 		},
 		Configurations: item.makeConfigurations(),
-		Impact: &nvd.NVDCVEFeedJSON10DefImpact{
-			BaseMetricV2: &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV2{
+		Impact: &nvd.NVDCVEAPIFeedJSONDefMetrics{
+			BaseMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
 				CVSSV2: &nvd.CVSSV20{
 					BaseScore:     extractCVSSBaseScore(item),
 					TemporalScore: extractCVSSTemporalScore(item),
@@ -51,8 +51,8 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 				},
 			},
 		},
-		LastModifiedDate: convertTime(item.PublishDate),
-		PublishedDate:    convertTime(item.Version1PublishDate),
+		LastModified: convertTime(item.PublishDate),
+		Published:    convertTime(item.Version1PublishDate),
 	}
 
 	return &nvdItem, nil
@@ -62,10 +62,10 @@ func (item *Vulnerability) ID() string {
 	return "fireeye-" + item.ReportID
 }
 
-func (item *Vulnerability) makeReferences() *nvd.CVEJSON40References {
-	var refsData []*nvd.CVEJSON40Reference
+func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
+	var refsData []*nvd.CVEAPIJSONReference
 	addRef := func(name, url string) {
-		refsData = append(refsData, &nvd.CVEJSON40Reference{
+		refsData = append(refsData, &nvd.CVEAPIJSONReference{
 			Name: name,
 			URL:  url,
 		})
@@ -79,24 +79,24 @@ func (item *Vulnerability) makeReferences() *nvd.CVEJSON40References {
 		}
 	}
 
-	return &nvd.CVEJSON40References{
+	return &nvd.CVEAPIJSONReferences{
 		ReferenceData: refsData,
 	}
 }
 
-func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEFeedJSON10DefConfigurations {
+func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
 	var matches []*nvd.NVDCVEFeedJSON10DefCPEMatch
 	for _, cpe := range extractCPEs(item) {
 		matches = append(matches, &nvd.NVDCVEFeedJSON10DefCPEMatch{
-			Cpe23Uri:   cpe,
+			Criteria:   cpe,
 			Vulnerable: true,
 		})
 	}
 
-	return &nvd.NVDCVEFeedJSON10DefConfigurations{
+	return &nvd.NVDCVEAPIFeedJSONDefConfigurations{
 		CVEDataVersion: cveDataVersion,
-		Nodes: []*nvd.NVDCVEFeedJSON10DefNode{
-			&nvd.NVDCVEFeedJSON10DefNode{
+		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
+			&nvd.NVDCVEAPIFeedJSONDefNode{
 				CPEMatch: matches,
 				Operator: "OR",
 			},

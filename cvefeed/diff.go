@@ -145,7 +145,7 @@ func (s *DiffStats) PercentChunk(chunk ChunkKind) float64 {
 	return float64(s.bitCounts[chunk.shift()]) / float64(len(s.entries)) * 100
 }
 
-func diffDetails(s *schema.NVDCVEFeedJSON10DefCVEItem, bit chunk) bag {
+func diffDetails(s *schema.NVDCVEAPIFeedJSONDefCVEItem, bit chunk) bag {
 	var v interface{}
 
 	switch bit {
@@ -194,7 +194,7 @@ func (s *DiffStats) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func englishDescription(s *schema.NVDCVEFeedJSON10DefCVEItem) string {
+func englishDescription(s *schema.NVDCVEAPIFeedJSONDefCVEItem) string {
 	for _, d := range s.CVE.Description.DescriptionData {
 		if d.Lang == "en" {
 			return d.Value
@@ -203,11 +203,11 @@ func englishDescription(s *schema.NVDCVEFeedJSON10DefCVEItem) string {
 	return ""
 }
 
-func sameDescription(a, b *schema.NVDCVEFeedJSON10DefCVEItem) bool {
+func sameDescription(a, b *schema.NVDCVEAPIFeedJSONDefCVEItem) bool {
 	return englishDescription(a) == englishDescription(b)
 }
 
-func sameScoreCVSSV2(a, b *schema.NVDCVEFeedJSON10DefCVEItem) bool {
+func sameScoreCVSSV2(a, b *schema.NVDCVEAPIFeedJSONDefCVEItem) bool {
 	var aScore, bScore float64
 	var aVector, bVector string
 
@@ -222,7 +222,7 @@ func sameScoreCVSSV2(a, b *schema.NVDCVEFeedJSON10DefCVEItem) bool {
 	return aScore == bScore && aVector == bVector
 }
 
-func sameScoreCVSSV3(a, b *schema.NVDCVEFeedJSON10DefCVEItem) bool {
+func sameScoreCVSSV3(a, b *schema.NVDCVEAPIFeedJSONDefCVEItem) bool {
 	var aScore, bScore float64
 	var aVector, bVector string
 
@@ -237,7 +237,7 @@ func sameScoreCVSSV3(a, b *schema.NVDCVEFeedJSON10DefCVEItem) bool {
 	return aScore == bScore && aVector == bVector
 }
 
-func sameScore(a, b *schema.NVDCVEFeedJSON10DefCVEItem) bool {
+func sameScore(a, b *schema.NVDCVEAPIFeedJSONDefCVEItem) bool {
 	return sameScoreCVSSV2(a, b) && sameScoreCVSSV3(a, b)
 }
 

@@ -18,13 +18,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	"github.com/facebookincubator/flog"
+	"github.com/facebookincubator/nvdtools/cvefeed/nvd/schema"
 	"github.com/facebookincubator/nvdtools/wfn"
 )
 
 // Matcher returns an object which knows how to match attributes
-func nodeMatcher(ID string, node *schema.NVDCVEFeedJSON10DefNode) (wfn.Matcher, error) {
+func nodeMatcher(ID string, node *schema.NVDCVEAPIFeedJSONDefNode) (wfn.Matcher, error) {
 	if node == nil {
 		return nil, fmt.Errorf("%s: node is nil", ID)
 	}

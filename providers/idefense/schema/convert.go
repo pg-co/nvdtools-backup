@@ -25,7 +25,7 @@ const (
 )
 
 // Convert implements runner.Convertible interface
-func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
+func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	lastModifiedDate, err := convertTime(item.LastModified)
 	if err != nil {
 		return nil, errors.Wrap(err, "can't convert last modified date")
@@ -40,7 +40,7 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 		return nil, errors.Wrap(err, "can't create configurations")
 	}
 
-	return &nvd.NVDCVEFeedJSON10DefCVEItem{
+	return &nvd.NVDCVEAPIFeedJSONDefCVEItem{
 		CVE: &nvd.CVEJSON40{
 			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
 				ID:       item.ID(),
@@ -49,7 +49,7 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 			DataFormat:  "MITRE",
 			DataType:    "CVE",
 			DataVersion: cveDataVersion,
-			Description: &nvd.CVEJSON40Description{
+			Description: &nvd.CVEAPIJSONDescription{
 				DescriptionData: []*nvd.CVEJSON40LangString{
 					{Lang: "en", Value: item.Description},
 				},
@@ -66,24 +66,24 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 			References: item.makeReferences(),
 		},
 		Configurations: configurations,
-		Impact: &nvd.NVDCVEFeedJSON10DefImpact{
-			BaseMetricV2: &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV2{
+		Impact: &nvd.NVDCVEAPIFeedJSONDefMetrics{
+			BaseMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
 				CVSSV2: &nvd.CVSSV20{
 					BaseScore:     item.Cvss2BaseScore,
 					TemporalScore: item.Cvss2TemporalScore,
 					VectorString:  item.Cvss2,
 				},
 			},
-			BaseMetricV3: &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV3{
-				CVSSV3: &nvd.CVSSV30{
+			BaseMetricV3: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+				CVSSV3: &nvd.CVSSData{
 					BaseScore:     item.Cvss3BaseScore,
 					TemporalScore: item.Cvss3TemporalScore,
 					VectorString:  item.Cvss3,
 				},
 			},
 		},
-		LastModifiedDate: lastModifiedDate,
-		PublishedDate:    publishedDate,
+		LastModified: lastModifiedDate,
+		Published:    publishedDate,
 	}, nil
 }
 
@@ -91,14 +91,14 @@ func (item *Vulnerability) ID() string {
 	return "idefense-" + item.Key
 }
 
-func (item *Vulnerability) makeReferences() *nvd.CVEJSON40References {
+func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
 	if len(item.SourcesExternal) == 0 {
 		return nil
 	}
 
-	var refsData []*nvd.CVEJSON40Reference
+	var refsData []*nvd.CVEAPIJSONReference
 	addRef := func(name, url string) {
-		refsData = append(refsData, &nvd.CVEJSON40Reference{
+		refsData = append(refsData, &nvd.CVEAPIJSONReference{
 			Name: name,
 			URL:  url,
 		})
@@ -119,12 +119,12 @@ func (item *Vulnerability) makeReferences() *nvd.CVEJSON40References {
 		addRef(fix.ID, fix.URL)
 	}
 
-	return &nvd.CVEJSON40References{
+	return &nvd.CVEAPIJSONReferences{
 		ReferenceData: refsData,
 	}
 }
 
-func (item *Vulnerability) makeConfigurations() (*nvd.NVDCVEFeedJSON10DefConfigurations, error) {
+func (item *Vulnerability) makeConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigurations, error) {
 	configs := item.findConfigurations()
 	if len(configs) == 0 {
 		return nil, errors.New("unable to find any configurations in data")
@@ -134,7 +134,7 @@ func (item *Vulnerability) makeConfigurations() (*nvd.NVDCVEFeedJSON10DefConfigu
 	for _, cfg := range configs {
 		for _, affected := range cfg.Affected {
 			match := &nvd.NVDCVEFeedJSON10DefCPEMatch{
-				Cpe23Uri:   cfg.Cpe23Uri,
+				Criteria:   cfg.Cpe23Uri,
 				Vulnerable: true,
 			}
 
@@ -155,10 +155,10 @@ func (item *Vulnerability) makeConfigurations() (*nvd.NVDCVEFeedJSON10DefConfigu
 		}
 	}
 
-	v := nvd.NVDCVEFeedJSON10DefConfigurations{
+	v := nvd.NVDCVEAPIFeedJSONDefConfigurations{
 		CVEDataVersion: cveDataVersion,
-		Nodes: []*nvd.NVDCVEFeedJSON10DefNode{
-			&nvd.NVDCVEFeedJSON10DefNode{
+		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
+			&nvd.NVDCVEAPIFeedJSONDefNode{
 				CPEMatch: matches,
 				Operator: "OR",
 			},

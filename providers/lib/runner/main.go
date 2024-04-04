@@ -35,7 +35,7 @@ type Convertible interface {
 	// ID should return vulnerabilities ID
 	ID() string
 	// Convert should return a new CVE Item, or an error if it's not possible
-	Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error)
+	Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error)
 }
 
 // Read should read the vulnerabilities from the given reader and push them into the channel
@@ -154,7 +154,7 @@ func (r *Runner) readVulnerabilities() (<-chan Convertible, error) {
 // getNVDFeed will convert the vulns in channel to NVD Feed
 func convert(vulns <-chan Convertible) error {
 	defer stats.TrackTime("convert.time", time.Now(), time.Second)
-	var feed nvd.NVDCVEFeedJSON10
+	var feed nvd.NVDCVEAPIFeedJSON
 	for vuln := range vulns {
 		converted, err := vuln.Convert()
 		if err != nil {

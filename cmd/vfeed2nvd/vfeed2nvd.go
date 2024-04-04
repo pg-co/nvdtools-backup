@@ -46,7 +46,7 @@ func run() error {
 		return fmt.Errorf("client failed to fetch vulnerabilities: %v", err)
 	}
 
-	var feed nvd.NVDCVEFeedJSON10
+	var feed nvd.NVDCVEAPIFeedJSON
 
 	for item := range items {
 		nvdItem, err := item.Convert()

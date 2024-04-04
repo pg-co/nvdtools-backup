@@ -28,7 +28,7 @@ const (
 	timeLayout     = "2006-01-02T15:04:05Z"
 )
 
-func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
+func (item *Vulnerability) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	lastModifiedDate, err := convertTime(item.VulndbLastModified)
 	if err != nil {
 		return nil, fmt.Errorf("can't convert last modified date: %v", err)
@@ -42,7 +42,7 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 		return nil, fmt.Errorf("can't create impact: %v", err)
 	}
 
-	nvdItem := nvd.NVDCVEFeedJSON10DefCVEItem{
+	nvdItem := nvd.NVDCVEAPIFeedJSONDefCVEItem{
 		CVE: &nvd.CVEJSON40{
 			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
 				ID:       item.ID(),
@@ -51,7 +51,7 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 			DataFormat:  "MITRE",
 			DataType:    "CVE",
 			DataVersion: cveDataVersion,
-			Description: &nvd.CVEJSON40Description{
+			Description: &nvd.CVEAPIJSONDescription{
 				DescriptionData: []*nvd.CVEJSON40LangString{
 					{Lang: "en", Value: item.Title},
 					{Lang: "en", Value: item.Description},
@@ -62,8 +62,8 @@ func (item *Vulnerability) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 		},
 		Configurations:   item.makeConfigurations(),
 		Impact:           impact,
-		LastModifiedDate: lastModifiedDate,
-		PublishedDate:    publishedDate,
+		LastModified: lastModifiedDate,
+		Published:    publishedDate,
 	}
 
 	addNVDData(&nvdItem, item.NVDAdditionalInfo)
@@ -75,26 +75,26 @@ func (item *Vulnerability) ID() string {
 	return fmt.Sprintf("rbs-%d", item.VulndbID)
 }
 
-func (item *Vulnerability) makeReferences() *nvd.CVEJSON40References {
+func (item *Vulnerability) makeReferences() *nvd.CVEAPIJSONReferences {
 	if len(item.ExtReferences) == 0 {
 		return nil
 	}
 
-	var refsData []*nvd.CVEJSON40Reference
+	var refsData []*nvd.CVEAPIJSONReference
 
 	for _, ref := range item.ExtReferences {
-		refsData = append(refsData, &nvd.CVEJSON40Reference{
+		refsData = append(refsData, &nvd.CVEAPIJSONReference{
 			Name: ref.Type,
 			URL:  ref.Value,
 		})
 	}
 
-	return &nvd.CVEJSON40References{
+	return &nvd.CVEAPIJSONReferences{
 		ReferenceData: refsData,
 	}
 }
 
-func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEFeedJSON10DefConfigurations {
+func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
 	var matches []*nvd.NVDCVEFeedJSON10DefCPEMatch
 
 	for _, vendor := range item.Vendors {
@@ -110,7 +110,7 @@ func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEFeedJSON10DefConfigur
 						continue
 					}
 					match := &nvd.NVDCVEFeedJSON10DefCPEMatch{
-						Cpe23Uri:   c,
+						Criteria:   c,
 						Vulnerable: true,
 					}
 					matches = append(matches, match)
@@ -119,10 +119,10 @@ func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEFeedJSON10DefConfigur
 		}
 	}
 
-	conf := nvd.NVDCVEFeedJSON10DefConfigurations{
+	conf := nvd.NVDCVEAPIFeedJSONDefConfigurations{
 		CVEDataVersion: cveDataVersion,
-		Nodes: []*nvd.NVDCVEFeedJSON10DefNode{
-			&nvd.NVDCVEFeedJSON10DefNode{
+		Nodes: []*nvd.NVDCVEAPIFeedJSONDefNode{
+			&nvd.NVDCVEAPIFeedJSONDefNode{
 				CPEMatch: matches,
 				Operator: "OR",
 			},
@@ -132,7 +132,7 @@ func (item *Vulnerability) makeConfigurations() *nvd.NVDCVEFeedJSON10DefConfigur
 	return &conf
 }
 
-func (item *Vulnerability) makeImpact() (*nvd.NVDCVEFeedJSON10DefImpact, error) {
+func (item *Vulnerability) makeImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
 	// TODO they don't have cvss vectors. they do have parts of it so we could construct them
 	// using our library nvdtools/cvss{2,3}/...
 
@@ -148,14 +148,14 @@ func (item *Vulnerability) makeImpact() (*nvd.NVDCVEFeedJSON10DefImpact, error) 
 		cvssv2 = &nvd.CVSSV20{BaseScore: item.CVSSMetrics[l2-1].Score}
 	}
 
-	var cvssv3 *nvd.CVSSV30
+	var cvssv3 *nvd.CVSSData
 	if l3 != 0 {
-		cvssv3 = &nvd.CVSSV30{BaseScore: item.CVSS3Metrics[l3-1].Score}
+		cvssv3 = &nvd.CVSSData{BaseScore: item.CVSS3Metrics[l3-1].Score}
 	}
 
-	impact := nvd.NVDCVEFeedJSON10DefImpact{
-		BaseMetricV2: &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV2{CVSSV2: cvssv2},
-		BaseMetricV3: &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV3{CVSSV3: cvssv3},
+	impact := nvd.NVDCVEAPIFeedJSONDefMetrics{
+		BaseMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{CVSSV2: cvssv2},
+		BaseMetricV3: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{CVSSV3: cvssv3},
 	}
 
 	return &impact, nil
@@ -183,11 +183,11 @@ func normalizeCPE(cpe string) (string, error) {
 	return attrs.BindToFmtString(), nil
 }
 
-func addNVDData(nvdItem *nvd.NVDCVEFeedJSON10DefCVEItem, additional []*NVDAdditionalInfo) {
+func addNVDData(nvdItem *nvd.NVDCVEAPIFeedJSONDefCVEItem, additional []*NVDAdditionalInfo) {
 	addRef := func(name, url string) {
 		nvdItem.CVE.References.ReferenceData = append(
 			nvdItem.CVE.References.ReferenceData,
-			&nvd.CVEJSON40Reference{
+			&nvd.CVEAPIJSONReference{
 				Name: name,
 				URL:  url,
 			},

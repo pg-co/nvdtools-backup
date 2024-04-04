@@ -44,8 +44,8 @@ func cpeMatcher(ID string, nvdMatch *schema.NVDCVEFeedJSON10DefCPEMatch) (wfn.Ma
 	// parse
 	match := cpeMatch{vulnerable: nvdMatch.Vulnerable}
 	var err error
-	if match.Attributes, err = parse(nvdMatch.Cpe23Uri); err != nil {
-		if match.Attributes, err = parse(nvdMatch.Cpe22Uri); err != nil {
+	if match.Attributes, err = parse(nvdMatch.Criteria); err != nil {
+		if match.Attributes, err = parse(nvdMatch.MatchCriteriaId); err != nil {
 			return nil, fmt.Errorf("%s: unable to parse both cpe2.2 and cpe2.3", ID)
 		}
 	}

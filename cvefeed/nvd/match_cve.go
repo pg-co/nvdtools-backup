@@ -23,7 +23,7 @@ import (
 
 var cveRegex = regexp.MustCompile("CVE-[0-9]{4}-[0-9]{4,}")
 
-func ToVuln(cve *schema.NVDCVEFeedJSON10DefCVEItem) *Vuln {
+func ToVuln(cve *schema.NVDCVEAPIFeedJSONDefCVEItem) *Vuln {
 	vuln := &Vuln{
 		cveItem: cve,
 	}
@@ -43,12 +43,12 @@ func ToVuln(cve *schema.NVDCVEFeedJSON10DefCVEItem) *Vuln {
 
 // Vuln implements the cvefeed.Vuln interface
 type Vuln struct {
-	cveItem *schema.NVDCVEFeedJSON10DefCVEItem
+	cveItem *schema.NVDCVEAPIFeedJSONDefCVEItem
 	wfn.Matcher
 }
 
 // Schema returns the underlying schema of the Vuln
-func (v *Vuln) Schema() *schema.NVDCVEFeedJSON10DefCVEItem {
+func (v *Vuln) Schema() *schema.NVDCVEAPIFeedJSONDefCVEItem {
 	return v.cveItem
 }
 
@@ -168,7 +168,7 @@ func (v *Vuln) cvssv2() *schema.CVSSV20 {
 }
 
 // just a helper to return the cvssv3 data
-func (v *Vuln) cvssv3() *schema.CVSSV30 {
+func (v *Vuln) cvssv3() *schema.CVSSData {
 	if v == nil || v.cveItem == nil || v.cveItem.Impact == nil || v.cveItem.Impact.BaseMetricV3 == nil {
 		return nil
 	}

@@ -33,7 +33,7 @@ type basicCVEData struct {
 }
 
 // Convert reads a vendor item and outputs it in the NVD format.
-func (item *Item) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
+func (item *Item) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	basicData, err := item.basicCVEData()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to extract cve data")

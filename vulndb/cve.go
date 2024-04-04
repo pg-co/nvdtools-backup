@@ -30,11 +30,11 @@ import (
 )
 
 type cveFile struct {
-	items []*nvd.NVDCVEFeedJSON10DefCVEItem
+	items []*nvd.NVDCVEAPIFeedJSONDefCVEItem
 }
 
 func (c *cveFile) Add(cve string, nvdjson []byte) error {
-	var item nvd.NVDCVEFeedJSON10DefCVEItem
+	var item nvd.NVDCVEAPIFeedJSONDefCVEItem
 	err := json.Unmarshal(nvdjson, &item)
 	if err != nil {
 		return errors.Wrapf(err, "%s json payload is corrupted: %v", cve, err)
@@ -44,7 +44,7 @@ func (c *cveFile) Add(cve string, nvdjson []byte) error {
 }
 
 func (c *cveFile) EncodeJSON(w io.Writer) error {
-	err := json.NewEncoder(w).Encode(&nvd.NVDCVEFeedJSON10{
+	err := json.NewEncoder(w).Encode(&nvd.NVDCVEAPIFeedJSON{
 		CVEItems: c.items,
 	})
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *cveFile) EncodeIndentedJSON(w io.Writer, prefix, indent string) error {
 
 // cveItem is a helper for extracting information from CVE items.
 type cveItem struct {
-	item *nvd.NVDCVEFeedJSON10DefCVEItem
+	item *nvd.NVDCVEAPIFeedJSONDefCVEItem
 }
 
 func (c cveItem) ID() string {
@@ -84,7 +84,7 @@ func (c cveItem) ID() string {
 }
 
 func (c cveItem) Published() time.Time {
-	t, err := ParseTime(c.item.PublishedDate)
+	t, err := ParseTime(c.item.Published)
 	if err != nil {
 		return time.Time{}
 	}
@@ -92,7 +92,7 @@ func (c cveItem) Published() time.Time {
 }
 
 func (c cveItem) Modified() time.Time {
-	t, err := ParseTime(c.item.LastModifiedDate)
+	t, err := ParseTime(c.item.LastModified)
 	if err != nil {
 		return time.Time{}
 	}
@@ -133,7 +133,7 @@ func (c cveItem) JSON() []byte {
 	return b
 }
 
-func readNVDCVEJSON(filename string) (*nvd.NVDCVEFeedJSON10, error) {
+func readNVDCVEJSON(filename string) (*nvd.NVDCVEAPIFeedJSON, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -144,7 +144,7 @@ func readNVDCVEJSON(filename string) (*nvd.NVDCVEFeedJSON10, error) {
 }
 
 // parseNVDCVEJSON parses NVD CVE JSON data from r, decompressing as needed.
-func parseNVDCVEJSON(r io.Reader) (*nvd.NVDCVEFeedJSON10, error) {
+func parseNVDCVEJSON(r io.Reader) (*nvd.NVDCVEAPIFeedJSON, error) {
 	br := bufio.NewReader(r)
 	b, err := br.Peek(2)
 	if err != nil {
@@ -167,7 +167,7 @@ func parseNVDCVEJSON(r io.Reader) (*nvd.NVDCVEFeedJSON10, error) {
 		return nil, errors.Wrap(err, "cannot read NVD CVE JSON feed")
 	}
 
-	var f nvd.NVDCVEFeedJSON10
+	var f nvd.NVDCVEAPIFeedJSON
 	err = json.NewDecoder(bytes.NewReader(b)).Decode(&f)
 	if err != nil {
 		if jsonErr, ok := err.(*json.SyntaxError); ok {

@@ -47,14 +47,14 @@ func ParseJSON(in io.Reader) ([]Vuln, error) {
 	return vulns, nil
 }
 
-func getFeed(in io.Reader) (*schema.NVDCVEFeedJSON10, error) {
+func getFeed(in io.Reader) (*schema.NVDCVEAPIFeedJSON, error) {
 	reader, err := setupReader(in)
 	if err != nil {
 		return nil, fmt.Errorf("can't setup reader: %v", err)
 	}
 	defer reader.Close()
 
-	var feed schema.NVDCVEFeedJSON10
+	var feed schema.NVDCVEAPIFeedJSON
 	if err := json.NewDecoder(reader).Decode(&feed); err != nil {
 		return nil, err
 	}

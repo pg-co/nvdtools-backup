@@ -119,7 +119,7 @@ func (s *Stats) Gather(dict Dictionary) {
 	}
 }
 
-func flattenRule(node *schema.NVDCVEFeedJSON10DefNode, operators *stack) string {
+func flattenRule(node *schema.NVDCVEAPIFeedJSONDefNode, operators *stack) string {
 	cpePart := ""
 	operators.push(node.Operator)
 	switch {
@@ -132,7 +132,7 @@ func flattenRule(node *schema.NVDCVEFeedJSON10DefNode, operators *stack) string 
 		return fmt.Sprintf("(%s)", strings.Join(outputs, fmt.Sprintf(" %s ", operator)))
 	case len(node.CPEMatch) > 0:
 		for _, cpeMatch := range node.CPEMatch {
-			cpeItems := strings.Split(cpeMatch.Cpe23Uri, ":")
+			cpeItems := strings.Split(cpeMatch.Criteria, ":")
 			if len(cpeItems) > 2 {
 				part := cpeItems[2]
 				if _, ok := cpeParts[part]; ok && !strings.Contains(cpePart, part) {

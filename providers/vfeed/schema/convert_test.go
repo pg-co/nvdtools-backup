@@ -79,7 +79,7 @@ func checkSchema(t *testing.T, input, expected string) {
 		flog.Fatalf("Failed to unmarshal example file: %v", err)
 	}
 
-	want := &nvd.NVDCVEFeedJSON10DefCVEItem{}
+	want := &nvd.NVDCVEAPIFeedJSONDefCVEItem{}
 	if err := unmarshalFile(want, expected); err != nil {
 		t.Fatalf("Failed to unmarshal converted file: %v", err)
 	}

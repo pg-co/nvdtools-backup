@@ -26,7 +26,7 @@ const (
 	cveVersion = "4.0"
 )
 
-func (cve *CVE) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
+func (cve *CVE) Convert() (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	publishedDate, err := convertTime(cve.PublicDate)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert published date: %v", err)
@@ -40,7 +40,7 @@ func (cve *CVE) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 		return nil, fmt.Errorf("unable to construct impact: %v", err)
 	}
 
-	item := nvd.NVDCVEFeedJSON10DefCVEItem{
+	item := nvd.NVDCVEAPIFeedJSONDefCVEItem{
 		CVE: &nvd.CVEJSON40{
 			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
 				ID:       cve.ID(),
@@ -49,7 +49,7 @@ func (cve *CVE) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 			DataFormat:  "MITRE",
 			DataType:    "CVE",
 			DataVersion: cveVersion,
-			Description: &nvd.CVEJSON40Description{
+			Description: &nvd.CVEAPIJSONDescription{
 				DescriptionData: []*nvd.CVEJSON40LangString{
 					{
 						Lang:  "en",
@@ -62,7 +62,7 @@ func (cve *CVE) Convert() (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
 		},
 		Configurations: configurations,
 		Impact:         impact,
-		PublishedDate:  publishedDate,
+		Published:  publishedDate,
 	}
 
 	return &item, nil
@@ -89,32 +89,32 @@ func (cve *CVE) newProblemType() *nvd.CVEJSON40Problemtype {
 	return &nvd.CVEJSON40Problemtype{ProblemtypeData: data}
 }
 
-func (cve *CVE) newReferences() *nvd.CVEJSON40References {
+func (cve *CVE) newReferences() *nvd.CVEAPIJSONReferences {
 	if len(cve.References) == 0 {
 		return nil
 	}
 
-	referenceData := make([]*nvd.CVEJSON40Reference, len(cve.References))
+	referenceData := make([]*nvd.CVEAPIJSONReference, len(cve.References))
 	for i, ref := range cve.References {
-		referenceData[i] = &nvd.CVEJSON40Reference{URL: ref}
+		referenceData[i] = &nvd.CVEAPIJSONReference{URL: ref}
 	}
 
-	return &nvd.CVEJSON40References{ReferenceData: referenceData}
+	return &nvd.CVEAPIJSONReferences{ReferenceData: referenceData}
 }
 
-func (cve *CVE) newImpact() (*nvd.NVDCVEFeedJSON10DefImpact, error) {
+func (cve *CVE) newImpact() (*nvd.NVDCVEAPIFeedJSONDefMetrics, error) {
 	if cve.CVSS == nil && cve.CVSS3 == nil {
 		return nil, fmt.Errorf("cvss v2 nor cvss v3 is set in the cve")
 	}
 
-	impact := nvd.NVDCVEFeedJSON10DefImpact{}
+	impact := nvd.NVDCVEAPIFeedJSONDefMetrics{}
 
 	if cve.CVSS != nil {
 		score, err := strconv.ParseFloat(cve.CVSS.BaseScore, 64)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse cvss v2 base score: %v", err)
 		}
-		impact.BaseMetricV2 = &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV2{
+		impact.BaseMetricV2 = &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
 			CVSSV2: &nvd.CVSSV20{
 				BaseScore:    score,
 				VectorString: cve.CVSS.Vector,
@@ -127,8 +127,8 @@ func (cve *CVE) newImpact() (*nvd.NVDCVEFeedJSON10DefImpact, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse cvss v3 base score: %v", err)
 		}
-		impact.BaseMetricV3 = &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV3{
-			CVSSV3: &nvd.CVSSV30{
+		impact.BaseMetricV3 = &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
+			CVSSV3: &nvd.CVSSData{
 				BaseScore:    score,
 				VectorString: cve.CVSS3.Vector,
 			},
@@ -140,8 +140,8 @@ func (cve *CVE) newImpact() (*nvd.NVDCVEFeedJSON10DefImpact, error) {
 
 // CPEs configuration, AKA the tricky part
 
-func (cve *CVE) newConfigurations() (*nvd.NVDCVEFeedJSON10DefConfigurations, error) {
-	nodes := make([]*nvd.NVDCVEFeedJSON10DefNode, len(cve.AffectedRelease)+len(cve.PackageState))
+func (cve *CVE) newConfigurations() (*nvd.NVDCVEAPIFeedJSONDefConfigurations, error) {
+	nodes := make([]*nvd.NVDCVEAPIFeedJSONDefNode, len(cve.AffectedRelease)+len(cve.PackageState))
 
 	var err error
 
@@ -158,7 +158,7 @@ func (cve *CVE) newConfigurations() (*nvd.NVDCVEFeedJSON10DefConfigurations, err
 		}
 	}
 
-	conf := nvd.NVDCVEFeedJSON10DefConfigurations{
+	conf := nvd.NVDCVEAPIFeedJSONDefConfigurations{
 		CVEDataVersion: cveVersion,
 		Nodes:          nodes,
 	}
@@ -166,12 +166,12 @@ func (cve *CVE) newConfigurations() (*nvd.NVDCVEFeedJSON10DefConfigurations, err
 	return &conf, nil
 }
 
-func (ar *AffectedRelease) createNode() (*nvd.NVDCVEFeedJSON10DefNode, error) {
-	node := nvd.NVDCVEFeedJSON10DefNode{
+func (ar *AffectedRelease) createNode() (*nvd.NVDCVEAPIFeedJSONDefNode, error) {
+	node := nvd.NVDCVEAPIFeedJSONDefNode{
 		Operator: "AND",
 		CPEMatch: []*nvd.NVDCVEFeedJSON10DefCPEMatch{
 			{
-				Cpe22Uri:   ar.CPE,
+				MatchCriteriaId:   ar.CPE,
 				Vulnerable: false,
 			},
 		},
@@ -184,8 +184,8 @@ func (ar *AffectedRelease) createNode() (*nvd.NVDCVEFeedJSON10DefNode, error) {
 		}
 
 		node.CPEMatch = append(node.CPEMatch, &nvd.NVDCVEFeedJSON10DefCPEMatch{
-			Cpe22Uri:   pkgAttrs.BindToURI(),
-			Cpe23Uri:   pkgAttrs.BindToFmtString(),
+			MatchCriteriaId:   pkgAttrs.BindToURI(),
+			Criteria:   pkgAttrs.BindToFmtString(),
 			Vulnerable: false,
 		})
 	}
@@ -193,24 +193,24 @@ func (ar *AffectedRelease) createNode() (*nvd.NVDCVEFeedJSON10DefNode, error) {
 	return &node, nil
 }
 
-func (ps *PackageState) createNode() (*nvd.NVDCVEFeedJSON10DefNode, error) {
+func (ps *PackageState) createNode() (*nvd.NVDCVEAPIFeedJSONDefNode, error) {
 	pkgAttrs, err := packageName2wfn(ps.PackageName)
 	if err != nil {
 		return nil, fmt.Errorf("can't create wfn from package name: %v", err)
 	}
 
-	node := nvd.NVDCVEFeedJSON10DefNode{
+	node := nvd.NVDCVEAPIFeedJSONDefNode{
 		Operator: "AND",
 		CPEMatch: []*nvd.NVDCVEFeedJSON10DefCPEMatch{
 			// package
 			{
-				Cpe22Uri:   pkgAttrs.BindToURI(),
-				Cpe23Uri:   pkgAttrs.BindToFmtString(),
+				MatchCriteriaId:   pkgAttrs.BindToURI(),
+				Criteria:   pkgAttrs.BindToFmtString(),
 				Vulnerable: !IsFixed(ps.FixState),
 			},
 			// distribution
 			{
-				Cpe22Uri:   ps.CPE,
+				MatchCriteriaId:   ps.CPE,
 				Vulnerable: false,
 			},
 		},

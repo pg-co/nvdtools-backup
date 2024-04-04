@@ -57,7 +57,7 @@ type ProvidersCVSS struct {
 
 // ProvidersReferences hold data related to the thread.
 type ProvidersReferences struct {
-	referenceData []*nvd.CVEJSON40Reference
+	referenceData []*nvd.CVEAPIJSONReference
 }
 
 // ProvidersConfiguration captures what specific software versions are vulnerable.
@@ -109,12 +109,12 @@ func providersConvertTime(t *time.Time) string {
 }
 
 // ProvidersNewItem creates a vendor item.
-func ProvidersNewItem(item *ProvidersItem) (*nvd.NVDCVEFeedJSON10DefCVEItem, error) {
+func ProvidersNewItem(item *ProvidersItem) (*nvd.NVDCVEAPIFeedJSONDefCVEItem, error) {
 	if err := item.validate(); err != nil {
 		return nil, fmt.Errorf("validation error: %v", err)
 	}
 
-	return &nvd.NVDCVEFeedJSON10DefCVEItem{
+	return &nvd.NVDCVEAPIFeedJSONDefCVEItem{
 		CVE: &nvd.CVEJSON40{
 			CVEDataMeta: &nvd.CVEJSON40CVEDataMeta{
 				ID:       item.ID,
@@ -123,7 +123,7 @@ func ProvidersNewItem(item *ProvidersItem) (*nvd.NVDCVEFeedJSON10DefCVEItem, err
 			DataFormat:  providersDataFormat,
 			DataType:    providersDataType,
 			DataVersion: providersDataVersion,
-			Description: &nvd.CVEJSON40Description{
+			Description: &nvd.CVEAPIJSONDescription{
 				DescriptionData: []*nvd.CVEJSON40LangString{
 					{
 						Lang:  providersDataLang,
@@ -135,16 +135,16 @@ func ProvidersNewItem(item *ProvidersItem) (*nvd.NVDCVEFeedJSON10DefCVEItem, err
 			References:  item.references(),
 		},
 		Configurations: item.Configuration.convertToNVD(),
-		Impact: &nvd.NVDCVEFeedJSON10DefImpact{
-			BaseMetricV2: &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV2{
+		Impact: &nvd.NVDCVEAPIFeedJSONDefMetrics{
+			BaseMetricV2: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV2{
 				CVSSV2: item.cvssV20(),
 			},
-			BaseMetricV3: &nvd.NVDCVEFeedJSON10DefImpactBaseMetricV3{
+			BaseMetricV3: &nvd.NVDCVEAPIFeedJSONDefImpactBaseMetricV31{
 				CVSSV3: item.cvssV30(),
 			},
 		},
-		LastModifiedDate: providersConvertTime(item.LastModifiedDate),
-		PublishedDate:    providersConvertTime(item.PublishedDate),
+		LastModified: providersConvertTime(item.LastModifiedDate),
+		Published:    providersConvertTime(item.PublishedDate),
 	}, nil
 }
 
@@ -173,24 +173,24 @@ func (item *ProvidersItem) cvssV20() *nvd.CVSSV20 {
 	}
 }
 
-func (item *ProvidersItem) cvssV30() *nvd.CVSSV30 {
+func (item *ProvidersItem) cvssV30() *nvd.CVSSData {
 	if item.CVSS3 == nil {
 		return nil
 	}
 
-	return &nvd.CVSSV30{
+	return &nvd.CVSSData{
 		BaseScore:     item.CVSS3.BaseScore,
 		TemporalScore: item.CVSS3.TemporalScore,
 		VectorString:  item.CVSS3.Vector,
 	}
 }
 
-func (item *ProvidersItem) references() *nvd.CVEJSON40References {
+func (item *ProvidersItem) references() *nvd.CVEAPIJSONReferences {
 	if item.References == nil || item.References.referenceData == nil {
 		return nil
 	}
 
-	return &nvd.CVEJSON40References{
+	return &nvd.CVEAPIJSONReferences{
 		ReferenceData: item.References.referenceData,
 	}
 }
@@ -225,7 +225,7 @@ func ProvidersNewReferences() *ProvidersReferences {
 
 // Add adds a new reference to the references.
 func (r *ProvidersReferences) Add(name, url string) {
-	r.referenceData = append(r.referenceData, &nvd.CVEJSON40Reference{
+	r.referenceData = append(r.referenceData, &nvd.CVEAPIJSONReference{
 		Name: name,
 		URL:  url,
 	})
@@ -238,20 +238,20 @@ func ProvidersNewConfiguration() *ProvidersConfiguration {
 	}
 }
 
-func (c *ProvidersConfiguration) convertToNVD() *nvd.NVDCVEFeedJSON10DefConfigurations {
-	var nvdNodes []*nvd.NVDCVEFeedJSON10DefNode
+func (c *ProvidersConfiguration) convertToNVD() *nvd.NVDCVEAPIFeedJSONDefConfigurations {
+	var nvdNodes []*nvd.NVDCVEAPIFeedJSONDefNode
 
 	for _, node := range c.Nodes {
-		nvdNode := &nvd.NVDCVEFeedJSON10DefNode{}
+		nvdNode := &nvd.NVDCVEAPIFeedJSONDefNode{}
 
 		if len(node.conditionalMatches) > 0 {
 			nvdNode.Operator = "AND"
-			nvdNode.Children = []*nvd.NVDCVEFeedJSON10DefNode{
-				&nvd.NVDCVEFeedJSON10DefNode{
+			nvdNode.Children = []*nvd.NVDCVEAPIFeedJSONDefNode{
+				&nvd.NVDCVEAPIFeedJSONDefNode{
 					Operator: "OR",
 					CPEMatch: node.matches,
 				},
-				&nvd.NVDCVEFeedJSON10DefNode{
+				&nvd.NVDCVEAPIFeedJSONDefNode{
 					Operator: "OR",
 					CPEMatch: node.conditionalMatches,
 				},
@@ -264,7 +264,7 @@ func (c *ProvidersConfiguration) convertToNVD() *nvd.NVDCVEFeedJSON10DefConfigur
 		nvdNodes = append(nvdNodes, nvdNode)
 	}
 
-	return &nvd.NVDCVEFeedJSON10DefConfigurations{
+	return &nvd.NVDCVEAPIFeedJSONDefConfigurations{
 		CVEDataVersion: providersDataVersion,
 		Nodes:          nvdNodes,
 	}
@@ -303,8 +303,8 @@ func ProvidersNewMatch(cpe22uri, cpe23uri string, vulnerable bool) *ProvidersMat
 
 func (m *ProvidersMatch) convertToNVD() *nvd.NVDCVEFeedJSON10DefCPEMatch {
 	return &nvd.NVDCVEFeedJSON10DefCPEMatch{
-		Cpe22Uri:              m.CPE22URI,
-		Cpe23Uri:              m.CPE23URI,
+		MatchCriteriaId:              m.CPE22URI,
+		Criteria:              m.CPE23URI,
 		VersionStartExcluding: m.VersionStartExcluding,
 		VersionStartIncluding: m.VersionStartIncluding,
 		VersionEndExcluding:   m.VersionEndExcluding,
